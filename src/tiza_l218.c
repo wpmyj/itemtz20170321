@@ -290,7 +290,7 @@ void AtCmgfFun(uint8 *data,uint16 len,uint8 flag)
 	}	
 	ReadOverTailIndex(len);
 }
-void AtCmglFun(uint8 *data,uint16 len,uint8 flag)
+void AtCmglFun(uint8 *data,uint16 len,uint8 flag)	//-接收到的AT命令,然后这里启动对应处理
 {
 	uint8 mat_index;
 	uint8 cmp_data[] = {"CMGL: "};
@@ -299,8 +299,8 @@ void AtCmglFun(uint8 *data,uint16 len,uint8 flag)
 		g_at_cmd_struct[AT_CMGL_INDEX].exe_flag = EXE_OK;
 		mat_index = SubMatch(cmp_data,StrLen(cmp_data,0),data,len);
 		
-		if(mat_index > 0) {
-	//		SmsProcessFun(data+mat_index,len-mat_index);
+		if(mat_index > 0) {//-大于0说明还有内容需要处理
+	//		SmsProcessFun(data+mat_index,len-mat_index);	//-对剩余内容继续处理
 		}
 	}
 	ReadOverTailIndex(len);
@@ -1605,7 +1605,7 @@ void SearchDataFromGPS(void)
 	uint8 recdata[GPS_UART_BUF_LEN];
 	uint16 reclen,index,mat_index;
 	
-	if(g_gps_uart_struct.rx_head != g_gps_uart_struct.rx_tail)
+	if(g_gps_uart_struct.rx_head != g_gps_uart_struct.rx_tail)	//-判断是否有新数据接收到
 	{//有数据
 		reclen = (GPS_UART_BUF_LEN + g_gps_uart_struct.rx_head - g_gps_uart_struct.rx_tail) % GPS_UART_BUF_LEN;
 		if(reclen<(GPS_UART_BUF_LEN/2) || reclen>GPS_UART_BUF_LEN){//至少400字节
@@ -1616,7 +1616,7 @@ void SearchDataFromGPS(void)
 			recdata[index] = g_gps_uart_struct.rx_buf[((g_gps_uart_struct.rx_tail) % GPS_UART_BUF_LEN)];
 		}		
 		#ifdef GPS_DEBUG  //打印GPS所有信息
-//			LocalUartFixedLenSend(recdata, reclen);
+			LocalUartFixedLenSend(recdata, reclen);
 		#endif		
 		
 		mat_index = SubMatch((uint8*)"$GNRMC,",StrLen((uint8*)"$GNRMC,",0),recdata,reclen);

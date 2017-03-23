@@ -88,7 +88,7 @@ void USART2_IRQHandler(void)///GPS
 	OSIntEnter();
 	if(USART_GetITStatus(USART2, USART_IT_RXNE) != RESET)
 	{
-		g_gps_uart_struct.rx_head = (g_gps_uart_struct.rx_head+1) % GPS_UART_BUF_LEN;
+		g_gps_uart_struct.rx_head = (g_gps_uart_struct.rx_head+1) % GPS_UART_BUF_LEN;	//-使用了双指针
 		
 		if(g_gps_uart_struct.rx_head == g_gps_uart_struct.rx_tail)
 		{//buff满，尾也向前移动

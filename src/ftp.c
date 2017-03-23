@@ -286,14 +286,14 @@ uint8 FtpGetFile(void)
 /***
 ftp://Vehicle:Vehicle#*@202.102.090.166:21/THAG_M2_0H_12V13_131220.bin
 ***/
-uint8 FtpAddrAnalysis(uint8 data[],uint16 len)
+uint8 FtpAddrAnalysis(uint8 data[],uint16 len)	//-对接收到的信息进行分析,然后决定处理
 {
 	uint8 *tem_p,*p_file_name,res = FALSE;
   uint8 i,j,file_len;
 	
 	tem_p = data;
 
-	if(!MemCmp("ftp://",tem_p,StrLen("ftp://",0)))
+	if(!MemCmp("ftp://",tem_p,StrLen("ftp://",0)))	//-信息传递过来需要连接的FTP地址,现在判断是否正确
 	{
 		goto RETURN_LAB;
 	}
@@ -310,7 +310,7 @@ uint8 FtpAddrAnalysis(uint8 data[],uint16 len)
 		{
 			break;
 		}
-		ftp_struct.user_name[i] = tem_p[i];
+		ftp_struct.user_name[i] = tem_p[i];	//-提取短信中的用户名
 	}
 	ftp_struct.user_name[i++] = 0x0d;
 	ftp_struct.user_name[i+1] = '\0';
@@ -327,7 +327,7 @@ uint8 FtpAddrAnalysis(uint8 data[],uint16 len)
 		{
 			break;
 		}
-		ftp_struct.pass_word[i] = tem_p[i];
+		ftp_struct.pass_word[i] = tem_p[i];	//-提取短信中的密码
 	}
 	ftp_struct.pass_word[i++] = 0x0d;
 	ftp_struct.pass_word[i+1] = '\0';
@@ -347,7 +347,7 @@ uint8 FtpAddrAnalysis(uint8 data[],uint16 len)
 		for(j=0;j<3;j++) 
 		{
 
-			ftp_struct.ftp_dst_ctrl_ip[i] = ftp_struct.ftp_dst_ctrl_ip[i]*10+(tem_p[i*4+j]&0x0f);
+			ftp_struct.ftp_dst_ctrl_ip[i] = ftp_struct.ftp_dst_ctrl_ip[i]*10+(tem_p[i*4+j]&0x0f);	//-短信中的登录IP地址
 		}
 	}
 	tem_p += 16;
@@ -380,7 +380,7 @@ uint8 FtpAddrAnalysis(uint8 data[],uint16 len)
 			goto RETURN_LAB;
 		}
 		
-		MemCpy(ftp_struct.file_path,tem_p,i+1);
+		MemCpy(ftp_struct.file_path,tem_p,i+1);	//-记录了要更新程序的路劲
 		ftp_struct.file_path[i+1] = 0x0d;
 		ftp_struct.file_path[i+2] = '\0';
 	}
@@ -874,13 +874,13 @@ uint8 FtpMain(void)
 		goto RETURN_LAB;
 	}
 
-	res = FtpFun(FtpTxUserName);
+	res = FtpFun(FtpTxUserName);	//-发送用户名
 	if(!res)
 	{
 		goto RETURN_LAB;
 	}
 	
-	res = FtpFun(FtpTxPassword);
+	res = FtpFun(FtpTxPassword);	//-发送密码
 	if(!res)
 	{
 		goto RETURN_LAB;

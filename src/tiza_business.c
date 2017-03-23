@@ -239,7 +239,7 @@ void L218_task(void *pdata)
 	g_gprs_data_struct.IP[1] = 94;
 	g_gprs_data_struct.IP[2] = 153;
 	g_gprs_data_struct.IP[3] = 146;
-	g_gprs_data_struct.Port = 9903;//27055;//
+	g_gprs_data_struct.Port = 9904;//27055;//
 	ProParaInit();
 	while(1)
 	{

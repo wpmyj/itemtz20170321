@@ -32,7 +32,7 @@ uint8 SmsParaLen(uint8 p_in[],uint8 max_count)
 	}
 	return len;
 }
-void SmsAckPacket(uint8 *p_in,uint8 *p_out,uint8 ack_flag)
+void SmsAckPacket(uint8 *p_in,uint8 *p_out,uint8 ack_flag)	//-组织应答报文的内容
 {
 	uint8 gps_data[GPS_INFO_LEN],len;
 	char str_ch[256];
@@ -499,7 +499,7 @@ uint8 SmsUnlock(uint8 p_in[],uint8 p_out[])
 	SmsAckPacket(p_in,p_out,ack_flag);
 	return res;
 }
-uint8 SmsProgramUpgrade(uint8 p_in[],uint8 p_out[])
+uint8 SmsProgramUpgrade(uint8 p_in[],uint8 p_out[])	//-程序更新
 {
 	uint8 in_len,res;
 	uint8 ack_flag = 'N';
@@ -650,7 +650,7 @@ TEL_LAB:
 	mat_index = SubMatch("*ftp://",StrLen("*ftp://",0),data,tmp_len);
 	if(mat_index > 0)
 	{
-		exe_flag[2] = SmsProgramUpgrade(data,tmp_data);
+		exe_flag[2] = SmsProgramUpgrade(data,tmp_data);	//-匹配到相应内容后,继续处理
 		goto ACK_LAB;
 	}
 	goto RETURN_LAB;
@@ -678,7 +678,7 @@ ACK_LAB:///短信回复
 		
 		if(res)
 		{
-			upgrade_flag = FtpMain();
+			upgrade_flag = FtpMain();	//-进入FTP获取
 			
 			gsm_misc_struct.cur_mode = AT_INIT_MODE;
 			res = GprsSwitchAtMode((uint8)UDP_MODE);	
@@ -1061,7 +1061,7 @@ uint8 SmsEncodePdu(uint8 *p_src,uint8 len,uint8 *p_dst,uint16 *dst_len)
 	return (j >> 1);
 } 
 
-void SmsProcessFun(uint8 data[],uint16 len)
+void SmsProcessFun(uint8 data[],uint16 len)	//-分析数组内容
 {
 	uint8 sms_len,sms_txt[256];
 	uint8 sms_index,mat_data_1[2] = {0x0d,0x0a},mat_data_2[] = {"CMGL: "};
@@ -1085,8 +1085,8 @@ void SmsProcessFun(uint8 data[],uint16 len)
 		data += mat_index;
 		
 		sms_txt[0] = '\0';
-		sms_len = SmsDecodePdu(data,sms_txt);
-		SmsAnalysis(sms_txt);
+		sms_len = SmsDecodePdu(data,sms_txt);	//-对报文进行解析
+		SmsAnalysis(sms_txt);	//-分析解析后的报文
 		GprsDelay(3*WAIT_1S,FALSE);
 		data += sms_len;
 		

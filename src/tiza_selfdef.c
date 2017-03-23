@@ -90,7 +90,7 @@ uint16 CrcCheck(uint8 *p_data,uint16 len)
 	fcs ^= 0xffff;
 	return fcs;
 }
-uint8 StrLen(const uint8 *str,uint8 max_count)
+uint8 StrLen(const uint8 *str,uint8 max_count)	//-计算字符串的长度
 {
 	uint8 len;
 	
@@ -137,7 +137,7 @@ void LongTimeDly(uint32 dly)
 	}
 }
 
-uint16 SubMatch(uint8 sub[],uint8 sub_len,uint8 tar[],uint16 tar_len) 
+uint16 SubMatch(uint8 sub[],uint8 sub_len,uint8 tar[],uint16 tar_len) //-判断前面是否是目标的子集,返回匹配的最后位置
 { 
 	uint16 i = 0, j = 0,index = 0; 
 	
@@ -297,7 +297,7 @@ uint32 LittleBigSwap(uint32 val)
 	
 	return tmp_val;
 }
-void MemCpy(uint8 dst[],uint8 src[],uint16 len)
+void MemCpy(uint8 dst[],uint8 src[],uint16 len)	//-内容的复制
 {
 	uint16 i;
 	
@@ -306,7 +306,7 @@ void MemCpy(uint8 dst[],uint8 src[],uint16 len)
 		dst[i]= src[i];
 	}
 }
-uint8 MemCmp(uint8 dst[],uint8 src[],uint16 len)
+uint8 MemCmp(uint8 dst[],uint8 src[],uint16 len)	//-比较前面几个字符是否相同
 {
 	uint8 res = TRUE;
 	uint16 i;
