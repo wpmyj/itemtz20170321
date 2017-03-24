@@ -75,7 +75,9 @@
 				
 				e_getfile2uart,
 				
-				
+				e_CheckSIM,
+				e_CheckNET,
+				e_CGATT,
 				
 				e_ftpend,
 			}FTP_TX_STEP;

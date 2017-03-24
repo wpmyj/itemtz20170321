@@ -21,7 +21,7 @@
 FTP_STRUCT	ftp_struct;
 FTP_TX_STEP	ftp_txstep = e_ftpstart;
 uint8 ftp_wait_flag = FALSE;
-
+/*
 uint8 Ftp_USER[SMS_FTPNAME_LEN+1] 				;//= {"Vehicle"};
 uint8 Ftp_PSW[SMS_FTPPSW_LEN+1] 					;//= {"Vehicle#*"};
 uint8 Ftp_IP[SMS_FTPIP_MAXLEN+1] 					;//= {"202.102.90.179"};
@@ -42,10 +42,17 @@ uint8 AT_CATR[] 		= {"AT+CATR=1,0\x0d\x0a"};					///配置资源中心接口
 uint8 AT_FSCD[] 		= {"AT+FSCD=C:\x0d\x0a"};						///设置EFS当前目录
 uint8 AT_FSMEM[] 		= {"AT+FSMEM\x0d\x0a"};							///查询EFS容量
 uint8 AT_FSDEL_ALL[]= {"AT+FSDEL=*.*\x0d\x0a"};					///删除EFS下所有文件
-
+*/
 //===========================================================================================================
 
 
+
+
+
+
+
+
+//===========================================================================================================
 
 /***
 ftp://Vehicle:Vehicle#*@202.102.090.166:21/THAG_M2_0H_12V13_131220.bin
@@ -170,7 +177,7 @@ RETURN_LAB:
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-
+/*
 static void FtpTx(u8 data[],u16 len)///FTP
 {
 	ftp_struct.ftp_receive_ack_flag = 0;
@@ -187,7 +194,7 @@ static void FtpTx(u8 data[],u16 len)///FTP
 		printf((const char*)data);
 	#endif
 }
-
+*/
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -261,6 +268,7 @@ void FtpDelay(void)
 */
 
 ///////////////////////////////////////////////////////////////////////////////
+/*
 static uint8 FtpTxDelFile(void)
 {
 	uint8 i,res=RES_WAIT;
@@ -290,7 +298,84 @@ static uint8 FtpTxDelFile(void)
 	
 	return res;
 }
+*/
 
+///////////////////////////////////////////////////////////////////////////////
+
+static uint8 FtpCheckSIM(void)
+{
+	uint8 i,res=RES_WAIT;
+	uint8 tmp_str[100];
+	uint8 tmp_len;
+	
+	//-if(ftp_wait_flag == FALSE)
+	//-{
+		//-tmp_len = StrLen(AT_CFTPSERV,0);
+		//-MemCpy(tmp_str,AT_CFTPSERV,tmp_len);
+		//-MemCpy(tmp_str+tmp_len,Ftp_IP,StrLen(Ftp_IP,0));
+		//-tmp_len += StrLen(Ftp_IP,0);
+		//-tmp_str[tmp_len++] = '\"';
+		//-tmp_str[tmp_len++] = 0x0d;
+		//-tmp_str[tmp_len++] = 0x0a;
+		
+		//-FtpTx(tmp_str,tmp_len);
+		
+		L218SendAtCmd(AT_CPIN_INDEX,NULL,0,(uint8 *)OK_ACK,2);//-检查SIM
+		
+		if(g_at_cmd_struct[AT_CPIN_INDEX].exe_flag == EXE_OK)
+			res = RES_TRUE;
+		else
+			res = RES_FALSE;	
+		//-ftp_wait_flag = TRUE;
+		//-ftp_struct.ftp_delaywait_time = 5;
+	//-}
+	//-else
+	//-{
+	//-	if(ftp_struct.ftp_delaywait_time == 0)
+	//-	{
+	//-		i = SubMatch((uint8*)"OK",StrLen((uint8*)"OK",0),ftp_struct.ftp_rx_buf,ftp_struct.ftp_rx_len);
+	//-		if(i != 0)
+	//-		{
+	//-			res = RES_TRUE;	
+	//-			ftp_wait_flag = FALSE;
+	//-			#ifdef FTP_DEBUG
+	//-			printf("IP_TRUE\r\n=======================\r\n");
+	//-			#endif
+	//-		}
+	//-		else	res = RES_FALSE;
+	//-	}
+	//-}
+	
+	return res;
+}
+
+static uint8 FtpCheckNET(void)
+{
+	uint8 res=RES_WAIT;
+	
+	L218SendAtCmd(AT_CREG_INDEX,NULL,0,(uint8 *)OK_ACK,2);			
+	
+	if(g_at_cmd_struct[AT_CREG_INDEX].exe_flag == EXE_OK)
+		res = RES_TRUE;
+	else
+		res = RES_FALSE;	
+		
+	return res;
+}
+
+static uint8 FtpCGATT(void)
+{
+	uint8 res=RES_WAIT;
+	
+	L218SendAtCmd(AT_CGATT_INDEX,NULL,0,(uint8 *)OK_ACK,2);
+	
+	if(g_at_cmd_struct[AT_CGATT_INDEX].exe_flag == EXE_OK)
+		res = RES_TRUE;
+	else
+		res = RES_FALSE;	
+		
+	return res;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -312,12 +397,43 @@ uint8 FtpMain(void)
 	{
 		case e_ftpstart:		//升级前准备
 		{		
-			ftp_txstep = e_efsdelfile;
+			//-ftp_txstep = e_efsdelfile;
+			ftp_txstep = e_CheckSIM;
 			ftp_struct.ftp_upgrade_fail_flag=0;
 			ftp_struct.ftp_delaywait_time 	= 0;
 		}
 		break;
-				
+		
+		case e_CheckSIM:
+		{
+			res = FtpCheckSIM();
+			if(res == RES_TRUE)
+				ftp_txstep = e_CheckNET;
+			else if(res == RES_FALSE) 	
+				goto RETURN_LAB;	
+		}
+		break;
+		
+		case e_CheckNET:
+		{
+			res = FtpCheckNET();
+			if(res == RES_TRUE)
+				ftp_txstep = e_CGATT;
+			else if(res == RES_FALSE) 	
+				goto RETURN_LAB;	
+		}
+		break;
+		
+		case e_CGATT:
+		{
+			res = FtpCGATT();
+			if(res == RES_TRUE)
+				ftp_txstep = e_ftpend;
+			else if(res == RES_FALSE) 	
+				goto RETURN_LAB;	
+		}
+		break;
+		/*		
 		case e_efsdelfile:
 		{
 			res = FtpTxDelFile();
@@ -460,7 +576,7 @@ uint8 FtpMain(void)
 				goto RETURN_LAB;	
 		}
 		break;
-		
+		*/
 		case e_ftpend:		//恢复初始状态
 		{
 				ftp_txstep = e_ftpstart;

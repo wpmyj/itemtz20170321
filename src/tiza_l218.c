@@ -51,6 +51,12 @@ const uint8 AT_GETGPS[]				={"AT+GETGPS=1\x0d\x0a"};															///¹Ø±Õ´ÓGSM´
       uint8 AT_EGPSC[]				={"AT+EGPSC%s\x0d\x0a"};															///1/0  ¿ªÆô/¹Ø±ÕGPSÄ£¿é
 const	uint8 AT_PMTK314[] 			={"AT+EGPSS=\"PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28\"\x0d\x0a"}; ///¹ýÂËGPS
 
+const uint8 AT_CPIN[] 			= {"AT+CPIN?\x0d"};	//-¼ì²éSIM
+
+
+
+
+
 const uint8 RECV_IPD_ACK[] = "+RECEIVE,";       		// RECV DATA LEN, ADD "+IPD" HEADER
 //const uint8 RECV_FROM_ACK[] = "RECV FROM:";       // RECV FORM: STRING IF SET SHOW "RECV FROM" HEADER
 const uint8 OK_ACK[] 						= "OK";
@@ -59,6 +65,8 @@ const uint8 CRLF_ACK[] 					= "\x0d\x0a";
 const uint8 CIPSEND_EXTRA_OK[] 	= "SEND OK";			// SEND SUCCESS
 const uint8 CIPCLOSE_EXTRA_OK[] = "CLOSE OK";			// IP IS CLOSED SUCCESS
 const uint8 GPRS_HAVE_RX_DATA[] = "+RECEIVE,";		// ÓÐ½ÓÊÕÊý¾Ý
+
+
 
 
 ///Ö¸Áî½á¹¹³õÊ¼»¯
@@ -100,6 +108,8 @@ AT_CMD_STRUCT g_at_cmd_struct[] =
 		{(uint8 *)AT_GETGPS,	       	3,	 1*SEND_1T,	EXE_NO,	AtGetgpsFun},
 		{(uint8 *)AT_EGPSC,	       		3,	 1*SEND_1T,	EXE_NO,	AtEgpscFun},
 		{(uint8 *)AT_PMTK314,	       	3,	 1*SEND_1T,	EXE_NO,	AtPmtk314Fun},
+		
+		{(uint8 *)AT_CPIN,	    	   	3,	 1*SEND_1T,	EXE_NO,	AtCPINFun},
 };
 static void ReadOverTailIndex(uint16 len)
 {
@@ -513,6 +523,18 @@ void AtPmtk314Fun(uint8 *data,uint16 len,uint8 flag)
 	}	
 	ReadOverTailIndex(len);
 }
+
+void AtCPINFun(uint8 *data,uint16 len,uint8 flag)
+{
+	if(flag) {
+		g_at_cmd_struct[AT_CPIN_INDEX].exe_flag = EXE_OK;
+	}
+	else {
+		g_at_cmd_struct[AT_CPIN_INDEX].exe_flag = EXE_FAIL;
+	}	
+	ReadOverTailIndex(len);
+}
+
 ///ATÖ¸Áî´¦Àíº¯Êý---end
 
 /******************************************************
@@ -565,7 +587,7 @@ void L218SendAtCmd(uint8 cmd_index,uint8 app_data[],uint8 app_len,uint8 mat_data
 	(g_at_cmd_struct[cmd_index].fun)(rx_data,rx_len,ack_flag);
 }
 
-uint16 L218UartIsRxDone(uint8 data[],uint16 len)
+uint16 L218UartIsRxDone(uint8 data[],uint16 len)	//-Ö÷¶¯²éÑ¯ÊÇ·ñÓÐÐèÒªµÄÄÚÈÝ
 {
 	uint16 count=0,index;
 	
@@ -1683,7 +1705,7 @@ void SearchDataFromSer(void)
 ******************************************************/
 void ModlueCalledProcess(void)
 {
-	uint8 res=2;
+	uint8 res=2,run=0;
 
 	switch(g_gprs_ctr_struct.business)
 	{
@@ -1807,6 +1829,20 @@ void ModlueCalledProcess(void)
 	}
 	SearchDataFromGPS();		//Ñ°ÕÒGPSÐÅÏ¢
 	SearchDataFromSer();		//Ñ°ÕÒ·þÎñÆ÷À´µÄÊý¾Ý
+	if(test_ProgramUpgrade_flag)
+	{
+		run = 1;
+		while(run)
+		{
+			OSTimeDlyHMSM(0, 0, 0, 2);
+			FtpMain();
+			if(ftp_struct.ftp_upgrade_fail_flag == 1)
+			{	
+				test_ProgramUpgrade_flag = 0;
+				run = 0;
+			}
+		}
+	}		
 } 
 
 

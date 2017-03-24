@@ -62,18 +62,10 @@
 	#define RES_DELETE	4
 	#define RES_NOFTPUP	5
 
-	#define false FALSE	
-	#define true TRUE
-	#define NULL 0
 	
 	#define INVALID_VAL_55  0x55
 	#define VALID_VAL_AA 		0xaa
 	
-	#define LEN_12 12
-	#define LEN_16 16
-	#define LEN_20 20
-	#define LEN_32 32
-	#define LEN_64 64
 	
 	
 	

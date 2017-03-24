@@ -8,6 +8,7 @@
 #define TEST_FTP	
 
 uint8 test_loginout_count =0;
+uint8 test_ProgramUpgrade_flag = 0;
 
 
 uint8 TestFTPProgramUpgrade(uint8 p_in[])
@@ -43,13 +44,15 @@ void TestFTPProcessFun(uint8 data[],uint16 tmp_len)
 	
 	if(exe_flag[2])
 	{
-		while(run)
-		{
-			OSTimeDlyHMSM(0, 0, 0, 2);
-			FtpMain();
-			if(ftp_struct.ftp_upgrade_fail_flag == 1)
-				run = 0;
-		}
+		ftp_struct.ftp_upgrade_flag = 1;
+		test_ProgramUpgrade_flag = 1;
+		//-while(run)
+		//-{
+		//-	OSTimeDlyHMSM(0, 0, 0, 2);
+		//-	//-FtpMain();
+		//-	if(ftp_struct.ftp_upgrade_fail_flag == 1)
+		//-		run = 0;
+		//-}
 	}		
 }
 

@@ -12,7 +12,7 @@
 	
 	
 	
-
+extern uint8 test_ProgramUpgrade_flag;
 	
 	
 

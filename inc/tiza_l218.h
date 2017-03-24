@@ -65,6 +65,9 @@
 			AT_GETGPS_INDEX,
 			AT_EGPSC_INDEX,
 			AT_PMTK314_INDEX,
+
+            AT_CPIN_INDEX,
+			
 		}AT_CMD_INDEX;
 	///AT指令处理函数---start
 		void AtFun(uint8 *data,uint16 len,uint8 flag);
@@ -101,6 +104,7 @@
 		void AtGetgpsFun(uint8 *data,uint16 len,uint8 flag);
 		void AtEgpscFun(uint8 *data,uint16 len,uint8 flag);
 		void AtPmtk314Fun(uint8 *data,uint16 len,uint8 flag);
+		void AtCPINFun(uint8 *data,uint16 len,uint8 flag);
 	///AT指令处理函数---end
 //		void L218SendAtCmd(uint8 cmd_index,uint8 app_data[],uint8 app_len,uint8 mat_data[],uint8 mat_len);
 		uint16 L218UartIsRxDone(uint8 data[],uint16 len);
@@ -276,6 +280,19 @@ GPS_EXTERN 	GPS_STRUCT g_gps_struct;
 
 
 //#define L218_DEBUG_qlj
+
+
+GPS_EXTERN 	const uint8 RECV_IPD_ACK[];       		// RECV DATA LEN, ADD "+IPD" HEADER
+//const uint8 RECV_FROM_ACK[] = "RECV FROM:";       // RECV FORM: STRING IF SET SHOW "RECV FROM" HEADER
+GPS_EXTERN 	const uint8 OK_ACK[];
+GPS_EXTERN 	const uint8 CRLF_ACK[];
+//const uint8 CIPOPEN_EXTRA_OK[]	= "CONNECT OK";		// IP IS OPENED SUCCESS
+GPS_EXTERN 	const uint8 CIPSEND_EXTRA_OK[];			// SEND SUCCESS
+GPS_EXTERN 	const uint8 CIPCLOSE_EXTRA_OK[];			// IP IS CLOSED SUCCESS
+GPS_EXTERN 	const uint8 GPRS_HAVE_RX_DATA[];		// ?????
+
+
+GPS_EXTERN 	AT_CMD_STRUCT g_at_cmd_struct[];
 		
 #endif
 
