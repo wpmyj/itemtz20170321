@@ -229,7 +229,7 @@ GPRS_EXTERN void ModlueCalledProcess(void);
 	#define DIR_TYPE 		3
 	#define AMP_TYPE 		4
 	
-/* 	#define LAT_INDEX							0			///纬度地址，百分秒，4
+ 	#define LAT_INDEX							0			///纬度地址，百分秒，4
 	#define LONG_INDEX						4			///经度地址，百分秒，4
 	#define SPEED_INDEX						8			///GPS速度1km/h 1
 	#define DIR_INDEX							9			///方向1
@@ -239,7 +239,7 @@ GPRS_EXTERN void ModlueCalledProcess(void);
 	#define TIME_INDEX						19			///时间起始地址
 	#define GPS_INFO_LEN					(TIME_INDEX+3)///上行协议GPS信息长度
 	#define SAT_INDEX						GPS_INFO_LEN  ///卫星数量
-	*/
+
 	#define GPS_INFORM_LEN			71	 		///GPS截取信息长度
 	
 	typedef union 

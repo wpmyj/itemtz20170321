@@ -538,6 +538,11 @@
               <FileType>1</FileType>
               <FilePath>..\STM32F10x_FWLib\src\stm32f10x_tim.c</FilePath>
             </File>
+            <File>
+              <FileName>stm32f10x_flash.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\STM32F10x_FWLib\src\stm32f10x_flash.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -692,6 +697,16 @@
               <FileName>test.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\src\test.c</FilePath>
+            </File>
+            <File>
+              <FileName>ftp.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\ftp.c</FilePath>
+            </File>
+            <File>
+              <FileName>flash.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\flash.c</FilePath>
             </File>
           </Files>
         </Group>

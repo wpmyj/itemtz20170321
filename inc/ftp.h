@@ -46,10 +46,40 @@
 			uint8 ftp_src_data_port[2];
 			uint8 ftp_dst_data_port[2];
 			uint8 ftp_dst_data_ip[4];
+			
+			uint8  ftp_receive_ack_flag;							//??ACK??
+			uint16 ftp_delaywait_time;								//??????? ???
+			
+			uint32 ftp_readefs_usedsize;
+			uint8 ftp_readefs_usedsize_times;
 
 		}FTP_STRUCT;
 		
 		EXTERN_FTP_GLOBAL FTP_STRUCT	ftp_struct;
+		
+			typedef enum 
+			{
+				e_ftpstart=0,
+				e_setip = 1,
+				e_setport,
+				e_setmode,
+				e_settype,
+				e_setuser,
+				e_setpassword,
+				
+				e_efscatr,
+				e_efsmem,
+				e_getfile2efs,
+				e_efscd,
+				e_efsdelfile,
+				
+				e_getfile2uart,
+				
+				
+				
+				e_ftpend,
+			}FTP_TX_STEP;
+		
 		
 		uint8 FtpTxUserName(void);
 		uint8 FtpTxPassword(void);

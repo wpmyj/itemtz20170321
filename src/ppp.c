@@ -1,6 +1,6 @@
 
 #define PPP_STRUCT_GLOBAL
-#include "include.h"
+#include "tiza_include.h"
 
 
 void PppInit(void)

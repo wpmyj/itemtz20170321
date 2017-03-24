@@ -570,7 +570,7 @@ void LocalUartFixedLenSend(uint8 data[],uint16 len)
 GPRS串口发送函数
 
 ******************************************************/
-void GprsUartFixedLenSend(uint8 data[],uint16 len) 
+void GprsUartFixedLenSend(uint8 data[],uint16 len) //-最终通过串口把数据一个一个送给L218
 {
 	uint16 i;
 	

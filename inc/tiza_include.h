@@ -48,13 +48,19 @@
 //	#include "sim.h"
 //	#include "ppp.h"
 //	#include "fram.h"
-//	#include "flash.h"
-//	#include "ftp.h"
+	#include "flash.h"
+	#include "ftp.h"
 //	#include "sms.h"
 //	#include "rs232.h"
 //	#include "localcomm.h"
 //	
 
+	#define RES_FALSE		0
+	#define RES_TRUE		1
+	#define RES_WAIT		2
+	#define RES_BREAK		3
+	#define RES_DELETE	4
+	#define RES_NOFTPUP	5
 
 	#define false FALSE	
 	#define true TRUE
