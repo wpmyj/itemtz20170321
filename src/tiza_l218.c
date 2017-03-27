@@ -57,6 +57,8 @@ const uint8 AT_SAPBR[] 			= {"AT+SAPBR="};	//-设置FTP的互联网链接类型
 
 
 
+
+
 const uint8 RECV_IPD_ACK[] = "+RECEIVE,";       		// RECV DATA LEN, ADD "+IPD" HEADER
 //const uint8 RECV_FROM_ACK[] = "RECV FROM:";       // RECV FORM: STRING IF SET SHOW "RECV FROM" HEADER
 const uint8 OK_ACK[] 						= "OK";
@@ -65,10 +67,28 @@ const uint8 CRLF_ACK[] 					= "\x0d\x0a";
 const uint8 CIPSEND_EXTRA_OK[] 	= "SEND OK";			// SEND SUCCESS
 const uint8 CIPCLOSE_EXTRA_OK[] = "CLOSE OK";			// IP IS CLOSED SUCCESS
 const uint8 GPRS_HAVE_RX_DATA[] = "+RECEIVE,";		// 有接收数据
+const uint8 CONST_DATA_1[] = "1\x0d";		// 有接收数据
+
+const uint8 FTPGET_OK_ACK[] = "+FTPGET: 1,1";		// 有接收数据
+
+
 
 const uint8 FTP_TYPEOFINTERCONNECT[] ={"3,1,\"CONTYPE\",\"GPRS\"\x0d"};
 const uint8 FTP_SETAPN[] ={"3,1,\"APN\",\"CMNET\"\x0d"};
 const uint8 FTP_OPENBEARER[] ={"1,1\x0d"};
+const uint8 AT_FTPTYPE[]		= {"AT+FTPTYPE=\"I\"\x0d"};	//-Set the type of data:“A” for FTP ASCII sessions,“I” for FTP Binary sessions
+const uint8 AT_FTPSERV[] 		= {"AT+FTPSERV=\"202.102.090.179\"\x0d"};						///IP
+const uint8 AT_FTPPORT[]        = {"AT+FTPPORT=21\x0d"};				///服务器端口
+const uint8 AT_FTPUN[] 			= {"AT+FTPUN=\"Vehicle\"\x0d"};							///USER
+const uint8 AT_FTPPW[] 			= {"AT+FTPPW=\"Vehicle#*\"\x0d"};							///PASSWORD
+const uint8 AT_FTPGETNAME[] 	= {"AT+FTPGETNAME=\"TIZA_XGDL_SBJ_V803_170306.bin\"\x0d"};	//-Set the file name in FTP server
+const uint8 AT_FTPGETPATH[] 	= {"AT+FTPGETPATH=\"/\"\x0d"};	//-Set the path of file
+const uint8 AT_FTPGET[] 		= {"AT+FTPGET="};	//-
+const uint8 AT_FTPQUIT[] 		= {"AT+FTPQUIT\x0d"};	//-Quit FTP connection
+
+
+
+
 
 
 ///指令结构初始化
@@ -112,7 +132,16 @@ AT_CMD_STRUCT g_at_cmd_struct[] =
 		{(uint8 *)AT_PMTK314,	       	3,	 1*SEND_1T,	EXE_NO,	AtPmtk314Fun},
 		
 		{(uint8 *)AT_CPIN,	    	   	3,	 1*SEND_1T,	EXE_NO,	AtCPINFun},
-		{(uint8 *)AT_SAPBR,	    	   	3,	 1*SEND_1T,	EXE_NO,	AtSAPBRFun},
+		{(uint8 *)AT_SAPBR,	    	   	30,	 1*SEND_1T,	EXE_NO,	AtSAPBRFun},
+		{(uint8 *)AT_FTPTYPE,    	   	30,	 1*SEND_1T,	EXE_NO,	AtFTPTYPEFun},
+		{(uint8 *)AT_FTPSERV,    	   	3,	 1*SEND_1T,	EXE_NO,	AtFTPSERVFun},
+		{(uint8 *)AT_FTPPORT,    	   	3,	 1*SEND_1T,	EXE_NO,	AtFTPPORTFun},
+		{(uint8 *)AT_FTPUN,    		   	3,	 1*SEND_1T,	EXE_NO,	AtFTPUNFun},
+		{(uint8 *)AT_FTPPW,    		   	3,	 1*SEND_1T,	EXE_NO,	AtFTPPWFun},
+		{(uint8 *)AT_FTPGETNAME,    	3,	 1*SEND_1T,	EXE_NO,	AtFTPGETNAMEFun},
+		{(uint8 *)AT_FTPGETPATH,    	3,	 1*SEND_1T,	EXE_NO,	AtFTPGETPATHFun},
+		{(uint8 *)AT_FTPGET,    	100,	 1*SEND_1T,	EXE_NO,	AtFTPGETFun},
+		{(uint8 *)AT_FTPQUIT,    		3,	 1*SEND_1T,	EXE_NO,	AtFTPQUITFun},
 };
 static void ReadOverTailIndex(uint16 len)
 {
@@ -548,6 +577,114 @@ void AtSAPBRFun(uint8 *data,uint16 len,uint8 flag)
 	}	
 	ReadOverTailIndex(len);
 }
+
+void AtFTPTYPEFun(uint8 *data,uint16 len,uint8 flag)
+{
+	if(flag) {
+		g_at_cmd_struct[AT_FTPTYPE_INDEX].exe_flag = EXE_OK;
+	}
+	else {
+		g_at_cmd_struct[AT_FTPTYPE_INDEX].exe_flag = EXE_FAIL;
+	}	
+	ReadOverTailIndex(len);
+}
+
+void AtFTPSERVFun(uint8 *data,uint16 len,uint8 flag)
+{
+	if(flag) {
+		g_at_cmd_struct[AT_FTPSERV_INDEX].exe_flag = EXE_OK;
+	}
+	else {
+		g_at_cmd_struct[AT_FTPSERV_INDEX].exe_flag = EXE_FAIL;
+	}	
+	ReadOverTailIndex(len);
+}
+
+void AtFTPPORTFun(uint8 *data,uint16 len,uint8 flag)
+{
+	if(flag) {
+		g_at_cmd_struct[AT_FTPPORT_INDEX].exe_flag = EXE_OK;
+	}
+	else {
+		g_at_cmd_struct[AT_FTPPORT_INDEX].exe_flag = EXE_FAIL;
+	}	
+	ReadOverTailIndex(len);
+}
+
+void AtFTPUNFun(uint8 *data,uint16 len,uint8 flag)
+{
+	if(flag) {
+		g_at_cmd_struct[AT_FTPUN_INDEX].exe_flag = EXE_OK;
+	}
+	else {
+		g_at_cmd_struct[AT_FTPUN_INDEX].exe_flag = EXE_FAIL;
+	}	
+	ReadOverTailIndex(len);
+}
+
+void AtFTPPWFun(uint8 *data,uint16 len,uint8 flag)
+{
+	if(flag) {
+		g_at_cmd_struct[AT_FTPPW_INDEX].exe_flag = EXE_OK;
+	}
+	else {
+		g_at_cmd_struct[AT_FTPPW_INDEX].exe_flag = EXE_FAIL;
+	}	
+	ReadOverTailIndex(len);
+}
+
+void AtFTPGETNAMEFun(uint8 *data,uint16 len,uint8 flag)
+{
+	if(flag) {
+		g_at_cmd_struct[AT_FTPPW_INDEX].exe_flag = EXE_OK;
+	}
+	else {
+		g_at_cmd_struct[AT_FTPPW_INDEX].exe_flag = EXE_FAIL;
+	}	
+	ReadOverTailIndex(len);
+}
+
+void AtFTPGETPATHFun(uint8 *data,uint16 len,uint8 flag)
+{
+	if(flag) {
+		g_at_cmd_struct[AT_FTPPW_INDEX].exe_flag = EXE_OK;
+	}
+	else {
+		g_at_cmd_struct[AT_FTPPW_INDEX].exe_flag = EXE_FAIL;
+	}	
+	ReadOverTailIndex(len);
+}
+
+void AtFTPGETFun(uint8 *data,uint16 len,uint8 flag)
+{
+	if(flag) {
+		g_at_cmd_struct[AT_FTPPW_INDEX].exe_flag = EXE_OK;
+	}
+	else {
+		g_at_cmd_struct[AT_FTPPW_INDEX].exe_flag = EXE_FAIL;
+	}	
+	ReadOverTailIndex(len);
+}
+
+void AtFTPQUITFun(uint8 *data,uint16 len,uint8 flag)
+{
+	if(flag) {
+		g_at_cmd_struct[AT_FTPPW_INDEX].exe_flag = EXE_OK;
+	}
+	else {
+		g_at_cmd_struct[AT_FTPPW_INDEX].exe_flag = EXE_FAIL;
+	}	
+	ReadOverTailIndex(len);
+}
+
+
+
+
+
+
+
+
+
 
 
 ///AT指令处理函数---end

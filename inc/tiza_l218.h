@@ -68,6 +68,16 @@
 
       AT_CPIN_INDEX,
       AT_SAPBR_INDEX,
+      AT_FTPTYPE_INDEX,
+      AT_FTPSERV_INDEX,
+      AT_FTPPORT_INDEX,
+      AT_FTPUN_INDEX,
+      AT_FTPPW_INDEX,
+
+      AT_FTPGETNAME_INDEX,
+      AT_FTPGETPATH_INDEX,
+      AT_FTPGET_INDEX,
+      AT_FTPQUIT_INDEX,
 			
 		}AT_CMD_INDEX;
 	///AT指令处理函数---start
@@ -107,6 +117,15 @@
 		void AtPmtk314Fun(uint8 *data,uint16 len,uint8 flag);
 		void AtCPINFun(uint8 *data,uint16 len,uint8 flag);
 		void AtSAPBRFun(uint8 *data,uint16 len,uint8 flag);
+		void AtFTPTYPEFun(uint8 *data,uint16 len,uint8 flag);
+		void AtFTPSERVFun(uint8 *data,uint16 len,uint8 flag);
+		void AtFTPPORTFun(uint8 *data,uint16 len,uint8 flag);
+		void AtFTPUNFun(uint8 *data,uint16 len,uint8 flag);
+		void AtFTPPWFun(uint8 *data,uint16 len,uint8 flag);
+		void AtFTPGETNAMEFun(uint8 *data,uint16 len,uint8 flag);
+		void AtFTPGETPATHFun(uint8 *data,uint16 len,uint8 flag);
+		void AtFTPGETFun(uint8 *data,uint16 len,uint8 flag);
+		void AtFTPQUITFun(uint8 *data,uint16 len,uint8 flag);
 		
 	///AT指令处理函数---end
 //		void L218SendAtCmd(uint8 cmd_index,uint8 app_data[],uint8 app_len,uint8 mat_data[],uint8 mat_len);
@@ -297,7 +316,8 @@ GPS_EXTERN 	const uint8 GPRS_HAVE_RX_DATA[];		// ?????
 GPS_EXTERN 	const uint8 FTP_TYPEOFINTERCONNECT[];
 GPS_EXTERN 	const uint8 FTP_SETAPN[];
 GPS_EXTERN 	const uint8 FTP_OPENBEARER[];
-
+GPS_EXTERN 	const uint8 CONST_DATA_1[];
+GPS_EXTERN 	const uint8 FTPGET_OK_ACK[];
 
 
 

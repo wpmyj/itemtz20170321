@@ -79,6 +79,12 @@
 				e_CheckNET,
 				e_CGATT,
 				e_SAPBR,
+				e_FTPTYPE,
+				e_FTPSERV,
+				e_FTPPORT,
+				e_FTPUN,
+				e_FTPPW,
+				e_DLAFile,
 				
 				e_ftpend,
 			}FTP_TX_STEP;
