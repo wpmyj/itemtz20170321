@@ -66,7 +66,8 @@
 			AT_EGPSC_INDEX,
 			AT_PMTK314_INDEX,
 
-            AT_CPIN_INDEX,
+      AT_CPIN_INDEX,
+      AT_SAPBR_INDEX,
 			
 		}AT_CMD_INDEX;
 	///AT指令处理函数---start
@@ -105,6 +106,8 @@
 		void AtEgpscFun(uint8 *data,uint16 len,uint8 flag);
 		void AtPmtk314Fun(uint8 *data,uint16 len,uint8 flag);
 		void AtCPINFun(uint8 *data,uint16 len,uint8 flag);
+		void AtSAPBRFun(uint8 *data,uint16 len,uint8 flag);
+		
 	///AT指令处理函数---end
 //		void L218SendAtCmd(uint8 cmd_index,uint8 app_data[],uint8 app_len,uint8 mat_data[],uint8 mat_len);
 		uint16 L218UartIsRxDone(uint8 data[],uint16 len);
@@ -290,6 +293,13 @@ GPS_EXTERN 	const uint8 CRLF_ACK[];
 GPS_EXTERN 	const uint8 CIPSEND_EXTRA_OK[];			// SEND SUCCESS
 GPS_EXTERN 	const uint8 CIPCLOSE_EXTRA_OK[];			// IP IS CLOSED SUCCESS
 GPS_EXTERN 	const uint8 GPRS_HAVE_RX_DATA[];		// ?????
+
+GPS_EXTERN 	const uint8 FTP_TYPEOFINTERCONNECT[];
+GPS_EXTERN 	const uint8 FTP_SETAPN[];
+GPS_EXTERN 	const uint8 FTP_OPENBEARER[];
+
+
+
 
 
 GPS_EXTERN 	AT_CMD_STRUCT g_at_cmd_struct[];

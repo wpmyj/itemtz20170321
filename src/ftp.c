@@ -377,6 +377,35 @@ static uint8 FtpCGATT(void)
 	return res;
 }
 
+static uint8 FtpSAPBR(void)
+{
+	uint8 res=RES_FALSE;
+	
+	//-1.Set the type of internet connection for FTP
+	L218SendAtCmd(AT_SAPBR_INDEX,FTP_TYPEOFINTERCONNECT,21,(uint8 *)OK_ACK,2);
+	
+	if(g_at_cmd_struct[AT_SAPBR_INDEX].exe_flag == EXE_OK)
+		res = RES_TRUE;
+	else
+		return res;
+	//-2.Set APN for FTP	
+	L218SendAtCmd(AT_SAPBR_INDEX,FTP_SETAPN,18,(uint8 *)OK_ACK,2);
+	
+	if(g_at_cmd_struct[AT_SAPBR_INDEX].exe_flag == EXE_OK)
+		res = RES_TRUE;
+	else
+		return res;	
+	//-3.Open bearer	
+	L218SendAtCmd(AT_SAPBR_INDEX,FTP_OPENBEARER,4,(uint8 *)OK_ACK,2);
+	
+	if(g_at_cmd_struct[AT_SAPBR_INDEX].exe_flag == EXE_OK)
+		res = RES_TRUE;
+	else
+		return res;		
+		
+	return res;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -428,155 +457,23 @@ uint8 FtpMain(void)
 		{
 			res = FtpCGATT();
 			if(res == RES_TRUE)
-				ftp_txstep = e_ftpend;
-			else if(res == RES_FALSE) 	
-				goto RETURN_LAB;	
-		}
-		break;
-		/*		
-		case e_efsdelfile:
-		{
-			res = FtpTxDelFile();
-			if(res == RES_TRUE)
-				ftp_txstep = e_setip;
+				ftp_txstep = e_SAPBR;
 			else if(res == RES_FALSE) 	
 				goto RETURN_LAB;	
 		}
 		break;
 		
-		case e_setip:
+		case e_SAPBR:
 		{
-			res = FtpSetIp();
+			res = FtpSAPBR();
 			if(res == RES_TRUE)
-				ftp_txstep = e_setport;
-			else if(res == RES_FALSE) 	//²»¿¼ÂÇÖØ·¢
-			{
-				goto RETURN_LAB;	
-			}
-		}
-		break;
-		case e_setport:
- 		{
-			res = FtpSetPort();
-			if(res == RES_TRUE)
-				ftp_txstep = e_setmode;
-			else if(res == RES_FALSE) 	
-			{
-				goto RETURN_LAB;	
-			}
-		}
-		break;
-		case e_setmode:
-		{
-			res = FtpTxPasv();
-			if(res == RES_TRUE)
-				ftp_txstep = e_settype;
-			else if(res == RES_FALSE) 	
-			{
-				goto RETURN_LAB;	
-			}
-		}
-		break;
-		case e_settype: 
-		{
-			res = FtpTxTypeI();
-			if(res == RES_TRUE)
-				ftp_txstep = e_setuser;
-			else if(res == RES_FALSE) 	
-			{
-				goto RETURN_LAB;	
-			}
-		}
-		break;
-		case e_setuser:
-		{
-			res = FtpTxUserName();
-			if(res == RES_TRUE)
-				ftp_txstep = e_setpassword;
-			else if(res == RES_FALSE) 	
-			{
-				goto RETURN_LAB;	
-			}
-		}
-		break;
-		case e_setpassword:
-		{
-			res = FtpTxPassword();
-			if(res == RES_TRUE)
-				ftp_txstep = e_efscatr;
-			else if(res == RES_FALSE) 	
-			{
-				goto RETURN_LAB;	
-			}
-		}
-		break;
-		///
-		case e_efscatr:
-		{
-			res = FtpTxSetURC();
-			if(res == RES_TRUE)
-			{
-				ftp_txstep = e_efsmem;
-				ftp_struct.ftp_readefs_usedsize_times = 1;
-			}
-			else if(res == RES_FALSE) 	
-			{
-				goto RETURN_LAB;	
-			}
-		}
-		break;
-		case e_efsmem:
-		{
-			res = FtpTxEFSMEM();
-			if(res == RES_TRUE)
-			{
-				if(ftp_struct.ftp_readefs_usedsize_times == 2)//second read
-					ftp_txstep = e_efscd;
-				else if(ftp_struct.ftp_readefs_usedsize_times == 1)//first read
-					ftp_txstep = e_getfile2efs;
-			}
+				ftp_txstep = e_ftpend;
 			else if(res == RES_FALSE) 	
 				goto RETURN_LAB;	
-		}
-		break;
-		case e_getfile2efs:
-		{
-			res = FtpTxGetFile();
-			if(res == RES_TRUE)
-			{
-				if(ftp_struct.ftp_readefs_usedsize_times == 1)
-					ftp_struct.ftp_readefs_usedsize_times = 2;
-				ftp_txstep = e_efsmem;
-			}
-			else if(res == RES_FALSE) 	
-				goto RETURN_LAB;
-		}
-		break;
-		case e_efscd:
-		{
-			res = FtpTxSetCurList();
-			if(res == RES_TRUE)
-				ftp_txstep = e_getfile2uart;
-			else if(res == RES_FALSE) 	
-			{
-				goto RETURN_LAB;	
-			}
 		}
 		break;
 		
-		case e_getfile2uart:
-		{
-			res = FtpGetFileToUART();
-			if(res == RES_TRUE)
-			{
-				WriteVersion();
-				ftp_txstep = e_ftpend;
-			}
-			else if(res == RES_FALSE) 	
-				goto RETURN_LAB;	
-		}
-		break;
-		*/
+		
 		case e_ftpend:		//»Ö¸´³õÊ¼×´Ì¬
 		{
 				ftp_txstep = e_ftpstart;

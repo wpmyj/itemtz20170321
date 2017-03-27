@@ -52,7 +52,7 @@ const uint8 AT_GETGPS[]				={"AT+GETGPS=1\x0d\x0a"};															///πÿ±’¥”GSM¥
 const	uint8 AT_PMTK314[] 			={"AT+EGPSS=\"PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28\"\x0d\x0a"}; ///π˝¬ÀGPS
 
 const uint8 AT_CPIN[] 			= {"AT+CPIN?\x0d"};	//-ºÏ≤ÈSIM
-
+const uint8 AT_SAPBR[] 			= {"AT+SAPBR="};	//-…Ë÷√FTPµƒª•¡™Õ¯¡¥Ω”¿‡–Õ
 
 
 
@@ -66,7 +66,9 @@ const uint8 CIPSEND_EXTRA_OK[] 	= "SEND OK";			// SEND SUCCESS
 const uint8 CIPCLOSE_EXTRA_OK[] = "CLOSE OK";			// IP IS CLOSED SUCCESS
 const uint8 GPRS_HAVE_RX_DATA[] = "+RECEIVE,";		// ”–Ω” ’ ˝æ›
 
-
+const uint8 FTP_TYPEOFINTERCONNECT[] ={"3,1,\"CONTYPE\",\"GPRS\"\x0d"};
+const uint8 FTP_SETAPN[] ={"3,1,\"APN\",\"CMNET\"\x0d"};
+const uint8 FTP_OPENBEARER[] ={"1,1\x0d"};
 
 
 ///÷∏¡ÓΩ·ππ≥ı ºªØ
@@ -110,6 +112,7 @@ AT_CMD_STRUCT g_at_cmd_struct[] =
 		{(uint8 *)AT_PMTK314,	       	3,	 1*SEND_1T,	EXE_NO,	AtPmtk314Fun},
 		
 		{(uint8 *)AT_CPIN,	    	   	3,	 1*SEND_1T,	EXE_NO,	AtCPINFun},
+		{(uint8 *)AT_SAPBR,	    	   	3,	 1*SEND_1T,	EXE_NO,	AtSAPBRFun},
 };
 static void ReadOverTailIndex(uint16 len)
 {
@@ -534,6 +537,18 @@ void AtCPINFun(uint8 *data,uint16 len,uint8 flag)
 	}	
 	ReadOverTailIndex(len);
 }
+
+void AtSAPBRFun(uint8 *data,uint16 len,uint8 flag)
+{
+	if(flag) {
+		g_at_cmd_struct[AT_SAPBR_INDEX].exe_flag = EXE_OK;
+	}
+	else {
+		g_at_cmd_struct[AT_SAPBR_INDEX].exe_flag = EXE_FAIL;
+	}	
+	ReadOverTailIndex(len);
+}
+
 
 ///AT÷∏¡Ó¥¶¿Ì∫Ø ˝---end
 
