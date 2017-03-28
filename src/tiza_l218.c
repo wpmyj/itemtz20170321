@@ -69,7 +69,9 @@ const uint8 CIPCLOSE_EXTRA_OK[] = "CLOSE OK";			// IP IS CLOSED SUCCESS
 const uint8 GPRS_HAVE_RX_DATA[] = "+RECEIVE,";		// 有接收数据
 const uint8 CONST_DATA_1[] = "1\x0d";		// 有接收数据
 
-const uint8 FTPGET_OK_ACK[] = "+FTPGET: 1,1";		// 有接收数据
+const uint8 FTPGET_OK_ACK[] = "+FTPGET: 1,1";		// Open FTP session SUCCESS
+const uint8 FTPGET_FINISH_ACK[] = "+FTPGET: 1,0";		// means finish read DATA
+
 
 
 
@@ -85,6 +87,11 @@ const uint8 AT_FTPGETNAME[] 	= {"AT+FTPGETNAME=\"TIZA_XGDL_SBJ_V803_170306.bin\"
 const uint8 AT_FTPGETPATH[] 	= {"AT+FTPGETPATH=\"/\"\x0d"};	//-Set the path of file
 const uint8 AT_FTPGET[] 		= {"AT+FTPGET="};	//-
 const uint8 AT_FTPQUIT[] 		= {"AT+FTPQUIT\x0d"};	//-Quit FTP connection
+
+
+
+uint8 TEMPF_DATA_FROM_FTP[4096];
+uint16 FLASH_DATA_PT = 0;
 
 
 
@@ -140,7 +147,7 @@ AT_CMD_STRUCT g_at_cmd_struct[] =
 		{(uint8 *)AT_FTPPW,    		   	3,	 1*SEND_1T,	EXE_NO,	AtFTPPWFun},
 		{(uint8 *)AT_FTPGETNAME,    	3,	 1*SEND_1T,	EXE_NO,	AtFTPGETNAMEFun},
 		{(uint8 *)AT_FTPGETPATH,    	3,	 1*SEND_1T,	EXE_NO,	AtFTPGETPATHFun},
-		{(uint8 *)AT_FTPGET,    	100,	 1*SEND_1T,	EXE_NO,	AtFTPGETFun},
+		{(uint8 *)AT_FTPGET,    	  100,	 1*SEND_1T,	EXE_NO,	AtFTPGETFun},
 		{(uint8 *)AT_FTPQUIT,    		3,	 1*SEND_1T,	EXE_NO,	AtFTPQUITFun},
 };
 static void ReadOverTailIndex(uint16 len)
@@ -636,10 +643,10 @@ void AtFTPPWFun(uint8 *data,uint16 len,uint8 flag)
 void AtFTPGETNAMEFun(uint8 *data,uint16 len,uint8 flag)
 {
 	if(flag) {
-		g_at_cmd_struct[AT_FTPPW_INDEX].exe_flag = EXE_OK;
+		g_at_cmd_struct[AT_FTPGETNAME_INDEX].exe_flag = EXE_OK;
 	}
 	else {
-		g_at_cmd_struct[AT_FTPPW_INDEX].exe_flag = EXE_FAIL;
+		g_at_cmd_struct[AT_FTPGETNAME_INDEX].exe_flag = EXE_FAIL;
 	}	
 	ReadOverTailIndex(len);
 }
@@ -647,32 +654,96 @@ void AtFTPGETNAMEFun(uint8 *data,uint16 len,uint8 flag)
 void AtFTPGETPATHFun(uint8 *data,uint16 len,uint8 flag)
 {
 	if(flag) {
-		g_at_cmd_struct[AT_FTPPW_INDEX].exe_flag = EXE_OK;
+		g_at_cmd_struct[AT_FTPGETPATH_INDEX].exe_flag = EXE_OK;
 	}
 	else {
-		g_at_cmd_struct[AT_FTPPW_INDEX].exe_flag = EXE_FAIL;
+		g_at_cmd_struct[AT_FTPGETPATH_INDEX].exe_flag = EXE_FAIL;
 	}	
 	ReadOverTailIndex(len);
 }
 
 void AtFTPGETFun(uint8 *data,uint16 len,uint8 flag)
 {
+    uint8 i = 0,cmp_data[] = {"+FTPGET: 2,"},cmp_data2[] = {"+FTPGET: 1,0"};
+	uint16 flash_len,mat_index = 0;
+	//-对接收到的数据进行组织
+
 	if(flag) {
-		g_at_cmd_struct[AT_FTPPW_INDEX].exe_flag = EXE_OK;
+		g_at_cmd_struct[AT_FTPGET_INDEX].exe_flag = EXE_OK;
 	}
 	else {
-		g_at_cmd_struct[AT_FTPPW_INDEX].exe_flag = EXE_FAIL;
+		g_at_cmd_struct[AT_FTPGET_INDEX].exe_flag = EXE_FAIL;
 	}	
+	
+	//-MemCpy(FLASH_DATA_FROM_FTP,data,len);
+	mat_index = SubMatch(cmp_data,11,data,len);
+	if(mat_index > 0)
+    {
+		while(i < 4)
+		{
+			if(data[mat_index + i] == 0x0d)
+				break;
+			i++;
+		}
+
+		if(i == 1)
+			flash_len = data[mat_index] - '0';
+		else if(i == 2)
+			flash_len = (data[mat_index] - '0') * 10 + (data[mat_index + 1] - '0');
+		else if(i == 3)
+			flash_len = (data[mat_index] - '0') * 100 + (data[mat_index + 1] - '0') * 10 + (data[mat_index + 2] - '0');
+		else if(i == 4)
+			flash_len = (data[mat_index] - '0') * 1000 + (data[mat_index + 1] - '0') * 100 + (data[mat_index + 2] - '0') * 10 + (data[mat_index + 3] - '0');
+
+		MemCpy(TEMPF_DATA_FROM_FTP + (FLASH_DATA_PT % 2)*1024,data + mat_index + i + 4,flash_len);
+		FLASH_DATA_PT++; 
+		//-if(FLASH_DATA_PT >= 40)
+		//-	FLASH_DATA_PT = 0;
+
+		mat_index = SubMatch(cmp_data2,12,data,len);
+		if(mat_index == 0)
+			g_at_cmd_struct[AT_FTPGET_INDEX].exe_flag = EXE_FAIL;
+
+		if(((FLASH_DATA_PT % 2) == 0) && (flash_len == 1024))
+		{
+			CpuFlashWrite(FTP_BLIND_FLASH_START+ftp_struct.ftp_rx_file_byte_counter,TEMPF_DATA_FROM_FTP, 2048);
+			ftp_struct.ftp_rx_file_byte_counter += 2048;
+		}
+		else
+		{
+			if(mat_index > 0)
+			{
+				CpuFlashWrite(FTP_BLIND_FLASH_START+ftp_struct.ftp_rx_file_byte_counter,TEMPF_DATA_FROM_FTP, ((FLASH_DATA_PT - 1) % 2)*1024 + flash_len);
+				ftp_struct.ftp_rx_file_byte_counter = 0;
+			}
+		}
+	
+
+		//-if(ftp_struct.ftp_rx_file_byte_counter)
+		//-MemCpy(TEMPF_DATA_FROM_FTP,data + mat_index + i + 4,flash_len);
+
+		//-暂时先在这里写flash,后期考虑合理性
+		
+		
+
+		//-ftp_struct.ftp_rx_file_lastfram_len = ftp_struct.ftp_rx_len;
+		//-ftp_struct.ftp_rx_file_byte_counter += ftp_struct.ftp_rx_len;
+		//-ftp_struct.ftp_rx_len = 0;
+		
+	}
+    
+	
+	
 	ReadOverTailIndex(len);
 }
 
 void AtFTPQUITFun(uint8 *data,uint16 len,uint8 flag)
 {
 	if(flag) {
-		g_at_cmd_struct[AT_FTPPW_INDEX].exe_flag = EXE_OK;
+		g_at_cmd_struct[AT_FTPQUIT_INDEX].exe_flag = EXE_OK;
 	}
 	else {
-		g_at_cmd_struct[AT_FTPPW_INDEX].exe_flag = EXE_FAIL;
+		g_at_cmd_struct[AT_FTPQUIT_INDEX].exe_flag = EXE_FAIL;
 	}	
 	ReadOverTailIndex(len);
 }

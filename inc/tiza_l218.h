@@ -318,6 +318,7 @@ GPS_EXTERN 	const uint8 FTP_SETAPN[];
 GPS_EXTERN 	const uint8 FTP_OPENBEARER[];
 GPS_EXTERN 	const uint8 CONST_DATA_1[];
 GPS_EXTERN 	const uint8 FTPGET_OK_ACK[];
+GPS_EXTERN 	const uint8 FTPGET_FINISH_ACK[];
 
 
 

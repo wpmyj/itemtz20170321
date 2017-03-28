@@ -476,7 +476,7 @@ static uint8 FtpFTPPW(void)
 	return res;
 }
 
-static uint8 FtpDLAFile(void)
+static uint8 FtpSETDLAFile(void)	//-ºÚµ•≈‹¡˜≥Ã,◊È÷Ø «”–Œ Ã‚µƒÂ?Â?Â?
 {
 	uint8 res=RES_WAIT;
 	uint8 TEMP_file_size[32] = "2,1024\x0d";
@@ -502,23 +502,47 @@ static uint8 FtpDLAFile(void)
 	else
 		res = RES_FALSE;
 
-	L218SendAtCmd(AT_FTPGET_INDEX,TEMP_file_size,7,(uint8 *)OK_ACK,2);
+	//-L218SendAtCmd(AT_FTPGET_INDEX,TEMP_file_size,7,(uint8 *)OK_ACK,2);
+	//-
+	//-if(g_at_cmd_struct[AT_FTPGET_INDEX].exe_flag == EXE_OK)
+	//-	res = RES_TRUE;
+	//-else
+	//-	res = RES_FALSE;
+	
+		
+	return res;
+}
+
+static uint8 FtpDLAFile(void)
+{
+	uint8 res=RES_WAIT;
+	uint8 TEMP_file_size[32] = "2,1024\x0d";
+	uint8 TEMP_OK_ACK[32] = "+FTPGET: 1,";
+	
+
+	L218SendAtCmd(AT_FTPGET_INDEX,TEMP_file_size,7,(uint8 *)TEMP_OK_ACK,11);
 	
 	if(g_at_cmd_struct[AT_FTPGET_INDEX].exe_flag == EXE_OK)
 		res = RES_TRUE;
-	else
-		res = RES_FALSE;
+	//-else
+	//-	res = RES_FALSE;
+		
+	return res;
+}
 
+static uint8 FtpFTPQUIT(void)
+{
+	uint8 res=RES_WAIT;
+	
 	L218SendAtCmd(AT_FTPQUIT_INDEX,NULL,0,(uint8 *)OK_ACK,2);
 	
 	if(g_at_cmd_struct[AT_FTPQUIT_INDEX].exe_flag == EXE_OK)
 		res = RES_TRUE;
 	else
-		res = RES_FALSE;
+		res = RES_FALSE;	
 		
 	return res;
 }
-
 
 
 
@@ -635,6 +659,16 @@ uint8 FtpMain(void)
 		{
 			res = FtpFTPPW();
 			if(res == RES_TRUE)
+				ftp_txstep = e_SETDLAFile;
+			else if(res == RES_FALSE) 	
+				goto RETURN_LAB;	
+		}
+		break;
+
+		case e_SETDLAFile:
+		{
+			res = FtpSETDLAFile();
+			if(res == RES_TRUE)
 				ftp_txstep = e_DLAFile;
 			else if(res == RES_FALSE) 	
 				goto RETURN_LAB;	
@@ -644,6 +678,18 @@ uint8 FtpMain(void)
 		case e_DLAFile:
 		{
 			res = FtpDLAFile();
+			if(res == RES_TRUE)
+				ftp_txstep = e_FTPQUIT;
+			else if(res == RES_WAIT)
+				ftp_txstep = e_DLAFile;
+			else if(res == RES_FALSE) 	
+				goto RETURN_LAB;	
+		}
+		break;
+
+		case e_FTPQUIT:
+		{
+			res = FtpFTPQUIT();
 			if(res == RES_TRUE)
 				ftp_txstep = e_ftpend;
 			else if(res == RES_FALSE) 	

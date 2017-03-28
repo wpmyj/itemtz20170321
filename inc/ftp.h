@@ -7,6 +7,18 @@
 			#define EXTERN_FTP_GLOBAL extern
 		#endif
 
+
+#define FTP_BLIND_FLASH_START 	ADDR_FLASH_SECTOR_6
+#define FTP_BLIND_FLASH_END 		ADDR_FLASH_SECTOR_8 - 0x100		//ADDR_FLASH_SECTOR_9结束
+#define FTP_VERSION_FLASH_ADD 	FTP_BLIND_FLASH_END	
+#define FTP_TOTAL_FLASH_ADD 		FTP_VERSION_FLASH_ADD	+ 20
+#define FTP_RECEIVED_FLASH_ADD 	FTP_VERSION_FLASH_ADD	+ 24
+#define FTP_SUMCHECK_FLASH_ADD 	FTP_VERSION_FLASH_ADD	+ 28
+
+
+
+
+
 		typedef struct
 		{
 			uint8 ftp_upgrade_flag;///FTP升级标志
@@ -35,7 +47,8 @@
 			uint8 ftp_rx_file_odd_byte_flag;///接收奇字节标志
 			
 			uint16 ftp_rx_len;///数据区长度
-			uint8 ftp_rx_buf[(GPRS_UART_BUF_LEN >> 3) + 1];///数据区指针,加1目的,STM32FLASH只支持2字节对齐
+			//-uint8 ftp_rx_buf[(GPRS_UART_BUF_LEN >> 3) + 1];///数据区指针,加1目的,STM32FLASH只支持2字节对齐
+			uint8 ftp_rx_buf[GPRS_UART_BUF_LEN + 1];
 			
 			
 			uint8 ftp_src_ctrl_port[2];
@@ -84,7 +97,9 @@
 				e_FTPPORT,
 				e_FTPUN,
 				e_FTPPW,
+				e_SETDLAFile,
 				e_DLAFile,
+				e_FTPQUIT,
 				
 				e_ftpend,
 			}FTP_TX_STEP;
