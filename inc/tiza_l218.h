@@ -17,6 +17,7 @@
 		#define EXE_FAIL 	0X02
 		#define EXE_GPS_ON 		0X03
 		#define EXE_GPS_OFF 	0X04
+		#define EXE_CONTINUE 	0X05
 				
 		#define L218_MAX_BUF_LEN 		GPRS_UART_BUF_LEN
 		
@@ -76,7 +77,8 @@
 
       AT_FTPGETNAME_INDEX,
       AT_FTPGETPATH_INDEX,
-      AT_FTPGET_INDEX,
+      AT_FTPGET1_INDEX,
+      AT_FTPGET2_INDEX,
       AT_FTPQUIT_INDEX,
 			
 		}AT_CMD_INDEX;
@@ -124,7 +126,8 @@
 		void AtFTPPWFun(uint8 *data,uint16 len,uint8 flag);
 		void AtFTPGETNAMEFun(uint8 *data,uint16 len,uint8 flag);
 		void AtFTPGETPATHFun(uint8 *data,uint16 len,uint8 flag);
-		void AtFTPGETFun(uint8 *data,uint16 len,uint8 flag);
+		void AtFTPGET1Fun(uint8 *data,uint16 len,uint8 flag);
+		void AtFTPGET2Fun(uint8 *data,uint16 len,uint8 flag);
 		void AtFTPQUITFun(uint8 *data,uint16 len,uint8 flag);
 		
 	///AT指令处理函数---end

@@ -85,7 +85,9 @@ const uint8 AT_FTPUN[] 			= {"AT+FTPUN=\"Vehicle\"\x0d"};							///USER
 const uint8 AT_FTPPW[] 			= {"AT+FTPPW=\"Vehicle#*\"\x0d"};							///PASSWORD
 const uint8 AT_FTPGETNAME[] 	= {"AT+FTPGETNAME=\"TIZA_XGDL_SBJ_V803_170306.bin\"\x0d"};	//-Set the file name in FTP server
 const uint8 AT_FTPGETPATH[] 	= {"AT+FTPGETPATH=\"/\"\x0d"};	//-Set the path of file
-const uint8 AT_FTPGET[] 		= {"AT+FTPGET="};	//-
+const uint8 AT_FTPGET1[] 		= {"AT+FTPGET=1\x0d"};	//-
+const uint8 AT_FTPGET2[] 		= {"AT+FTPGET="};	//-
+
 const uint8 AT_FTPQUIT[] 		= {"AT+FTPQUIT\x0d"};	//-Quit FTP connection
 
 
@@ -147,8 +149,9 @@ AT_CMD_STRUCT g_at_cmd_struct[] =
 		{(uint8 *)AT_FTPPW,    		   	3,	 1*SEND_1T,	EXE_NO,	AtFTPPWFun},
 		{(uint8 *)AT_FTPGETNAME,    	3,	 1*SEND_1T,	EXE_NO,	AtFTPGETNAMEFun},
 		{(uint8 *)AT_FTPGETPATH,    	3,	 1*SEND_1T,	EXE_NO,	AtFTPGETPATHFun},
-		{(uint8 *)AT_FTPGET,    	  100,	 1*SEND_1T,	EXE_NO,	AtFTPGETFun},
-		{(uint8 *)AT_FTPQUIT,    		3,	 1*SEND_1T,	EXE_NO,	AtFTPQUITFun},
+		{(uint8 *)AT_FTPGET1,    	  100,	 1*SEND_1T,	EXE_NO,	AtFTPGET1Fun},
+		{(uint8 *)AT_FTPGET2,    	  100,	 10*SEND_1T,	EXE_NO,	AtFTPGET2Fun},
+		{(uint8 *)AT_FTPQUIT,    	    3,	 1*SEND_1T,	EXE_NO,	AtFTPQUITFun},
 };
 static void ReadOverTailIndex(uint16 len)
 {
@@ -662,21 +665,27 @@ void AtFTPGETPATHFun(uint8 *data,uint16 len,uint8 flag)
 	ReadOverTailIndex(len);
 }
 
-void AtFTPGETFun(uint8 *data,uint16 len,uint8 flag)
+void AtFTPGET1Fun(uint8 *data,uint16 len,uint8 flag)
 {
-    uint8 i = 0,cmp_data[] = {"+FTPGET: 2,"},cmp_data2[] = {"+FTPGET: 1,0"};
+	if(flag) {
+		g_at_cmd_struct[AT_FTPGET1_INDEX].exe_flag = EXE_OK;
+	}
+	else {
+		g_at_cmd_struct[AT_FTPGET1_INDEX].exe_flag = EXE_FAIL;
+	}	
+	ReadOverTailIndex(len);
+}
+
+
+void AtFTPGET2Fun(uint8 *data,uint16 len,uint8 flag)
+{
+    uint8 i = 0,cmp_data[] = {"+FTPGET: 2,"},cmp_data1[] = {"+FTPGET: 1,"},cmp_data2[] = {"+FTPGET: 1,0"},cmp_data3[] = {"+FTPGET: 1,1"};
 	uint16 flash_len,mat_index = 0;
 	//-对接收到的数据进行组织
 
-	if(flag) {
-		g_at_cmd_struct[AT_FTPGET_INDEX].exe_flag = EXE_OK;
-	}
-	else {
-		g_at_cmd_struct[AT_FTPGET_INDEX].exe_flag = EXE_FAIL;
-	}	
-	
-	//-MemCpy(FLASH_DATA_FROM_FTP,data,len);
-	mat_index = SubMatch(cmp_data,11,data,len);
+	g_at_cmd_struct[AT_FTPGET2_INDEX].exe_flag = EXE_FAIL;
+
+	mat_index = SubMatch(cmp_data,StrLen(cmp_data,0),data,len);	//-获取字节长度数据
 	if(mat_index > 0)
     {
 		while(i < 4)
@@ -695,44 +704,38 @@ void AtFTPGETFun(uint8 *data,uint16 len,uint8 flag)
 		else if(i == 4)
 			flash_len = (data[mat_index] - '0') * 1000 + (data[mat_index + 1] - '0') * 100 + (data[mat_index + 2] - '0') * 10 + (data[mat_index + 3] - '0');
 
-		MemCpy(TEMPF_DATA_FROM_FTP + (FLASH_DATA_PT % 2)*1024,data + mat_index + i + 4,flash_len);
-		FLASH_DATA_PT++; 
-		//-if(FLASH_DATA_PT >= 40)
-		//-	FLASH_DATA_PT = 0;
+		//?没有到1024需要缓存到1024
+		//?结束字符没有跟上,需要调整
+		MemCpy(TEMPF_DATA_FROM_FTP + ftp_struct.ftp_rx_len,data + mat_index + i + 4,flash_len);
+		ftp_struct.ftp_rx_file_byte_counter += flash_len;
+		ftp_struct.ftp_rx_len += flash_len;
 
-		mat_index = SubMatch(cmp_data2,12,data,len);
-		if(mat_index == 0)
-			g_at_cmd_struct[AT_FTPGET_INDEX].exe_flag = EXE_FAIL;
-
-		if(((FLASH_DATA_PT % 2) == 0) && (flash_len == 1024))
+		if(ftp_struct.ftp_rx_len >= 2048)
 		{
-			CpuFlashWrite(FTP_BLIND_FLASH_START+ftp_struct.ftp_rx_file_byte_counter,TEMPF_DATA_FROM_FTP, 2048);
-			ftp_struct.ftp_rx_file_byte_counter += 2048;
+			CpuFlashWrite(FTP_BLIND_FLASH_START+((ftp_struct.ftp_rx_file_byte_counter / 2048) - 1) * 2048,TEMPF_DATA_FROM_FTP, 2048);
+			ftp_struct.ftp_rx_len -= 2048;
+			if(ftp_struct.ftp_rx_len)
+				MemCpy(TEMPF_DATA_FROM_FTP,TEMPF_DATA_FROM_FTP + ftp_struct.ftp_rx_len,ftp_struct.ftp_rx_len);
 		}
+	}
+
+	mat_index = SubMatch(cmp_data2,StrLen(cmp_data2,0),data,len);	//-判断是否是最后一帧
+	if(mat_index > 0)
+	{
+		g_at_cmd_struct[AT_FTPGET2_INDEX].exe_flag = EXE_OK;
+		CpuFlashWrite(FTP_BLIND_FLASH_START+(ftp_struct.ftp_rx_file_byte_counter / 2048) * 2048,TEMPF_DATA_FROM_FTP, ftp_struct.ftp_rx_len);
+		ftp_struct.ftp_rx_len = 0;
+		ftp_struct.ftp_rx_file_byte_counter = 0;
+	}
+	else
+	{
+		mat_index = SubMatch(cmp_data3,StrLen(cmp_data3,0),data,len);
+		if(mat_index > 0)
+			g_at_cmd_struct[AT_FTPGET2_INDEX].exe_flag = EXE_CONTINUE;	//-需要增加超时退出
 		else
-		{
-			if(mat_index > 0)
-			{
-				CpuFlashWrite(FTP_BLIND_FLASH_START+ftp_struct.ftp_rx_file_byte_counter,TEMPF_DATA_FROM_FTP, ((FLASH_DATA_PT - 1) % 2)*1024 + flash_len);
-				ftp_struct.ftp_rx_file_byte_counter = 0;
-			}
-		}
-	
-
-		//-if(ftp_struct.ftp_rx_file_byte_counter)
-		//-MemCpy(TEMPF_DATA_FROM_FTP,data + mat_index + i + 4,flash_len);
-
-		//-暂时先在这里写flash,后期考虑合理性
-		
-		
-
-		//-ftp_struct.ftp_rx_file_lastfram_len = ftp_struct.ftp_rx_len;
-		//-ftp_struct.ftp_rx_file_byte_counter += ftp_struct.ftp_rx_len;
-		//-ftp_struct.ftp_rx_len = 0;
-		
+			g_at_cmd_struct[AT_FTPGET2_INDEX].exe_flag = EXE_FAIL;
 	}
     
-	
 	
 	ReadOverTailIndex(len);
 }
@@ -744,7 +747,7 @@ void AtFTPQUITFun(uint8 *data,uint16 len,uint8 flag)
 	}
 	else {
 		g_at_cmd_struct[AT_FTPQUIT_INDEX].exe_flag = EXE_FAIL;
-	}	
+	}
 	ReadOverTailIndex(len);
 }
 
@@ -2055,6 +2058,7 @@ void ModlueCalledProcess(void)
 	if(test_ProgramUpgrade_flag)
 	{
 		run = 1;
+		ftp_struct.ftp_txstep = e_ftpstart;
 		while(run)
 		{
 			OSTimeDlyHMSM(0, 0, 0, 2);

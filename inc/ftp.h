@@ -16,7 +16,39 @@
 #define FTP_SUMCHECK_FLASH_ADD 	FTP_VERSION_FLASH_ADD	+ 28
 
 
-
+			typedef enum 
+			{
+				e_ftpstart=0,
+				e_setip = 1,
+				e_setport,
+				e_setmode,
+				e_settype,
+				e_setuser,
+				e_setpassword,
+				
+				e_efscatr,
+				e_efsmem,
+				e_getfile2efs,
+				e_efscd,
+				e_efsdelfile,
+				
+				e_getfile2uart,
+				
+				e_CheckSIM,
+				e_CheckNET,
+				e_CGATT,
+				e_SAPBR,
+				e_FTPTYPE,
+				e_FTPSERV,
+				e_FTPPORT,
+				e_FTPUN,
+				e_FTPPW,
+				e_SETDLAFile,
+				e_DLAFile,
+				e_FTPQUIT,
+				
+				e_ftpend,
+			}FTP_TX_STEP;
 
 
 		typedef struct
@@ -66,43 +98,12 @@
 			uint32 ftp_readefs_usedsize;
 			uint8 ftp_readefs_usedsize_times;
 
+			FTP_TX_STEP ftp_txstep;
+
 		}FTP_STRUCT;
 		
 		EXTERN_FTP_GLOBAL FTP_STRUCT	ftp_struct;
 		
-			typedef enum 
-			{
-				e_ftpstart=0,
-				e_setip = 1,
-				e_setport,
-				e_setmode,
-				e_settype,
-				e_setuser,
-				e_setpassword,
-				
-				e_efscatr,
-				e_efsmem,
-				e_getfile2efs,
-				e_efscd,
-				e_efsdelfile,
-				
-				e_getfile2uart,
-				
-				e_CheckSIM,
-				e_CheckNET,
-				e_CGATT,
-				e_SAPBR,
-				e_FTPTYPE,
-				e_FTPSERV,
-				e_FTPPORT,
-				e_FTPUN,
-				e_FTPPW,
-				e_SETDLAFile,
-				e_DLAFile,
-				e_FTPQUIT,
-				
-				e_ftpend,
-			}FTP_TX_STEP;
 		
 		
 		uint8 FtpTxUserName(void);
