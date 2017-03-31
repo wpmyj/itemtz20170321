@@ -8,7 +8,7 @@
 		#endif
 
 
-#define FTP_BLIND_FLASH_START 	ADDR_FLASH_SECTOR_6
+#define FTP_BLIND_FLASH_START 	ADDR_FLASH_SECTOR_5
 #define FTP_BLIND_FLASH_END 		ADDR_FLASH_SECTOR_8 - 0x100		//ADDR_FLASH_SECTOR_9结束
 #define FTP_VERSION_FLASH_ADD 	FTP_BLIND_FLASH_END	
 #define FTP_TOTAL_FLASH_ADD 		FTP_VERSION_FLASH_ADD	+ 20
@@ -97,6 +97,7 @@
 			
 			uint32 ftp_readefs_usedsize;
 			uint8 ftp_readefs_usedsize_times;
+			uint8 ftp_upgrade_success_flag;///升级成功标志
 
 			FTP_TX_STEP ftp_txstep;
 

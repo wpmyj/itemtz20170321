@@ -28,12 +28,12 @@
 		char software_version[LEN_32];///TIZA_开头，车机电压24V，版本号1.0,年月日
 	}SYS_CONST_PARA_STRUCT;///系统启动参数
 
-	typedef struct
-	{
-		uint32 program_update_flag;///程序更新标志
-		uint32 program_total_size;///字节总数
-		uint32 sys_para_init_flag;///参数重新初始化标志
-	}SYS_BOOT_PARA_STRUCT;///系统启动参数
+//-	typedef struct
+//-	{
+//-		uint32 program_update_flag;///程序更新标志
+//-		uint32 program_total_size;///字节总数
+//-		uint32 sys_para_init_flag;///参数重新初始化标志
+//-	}SYS_BOOT_PARA_STRUCT;///系统启动参数
 	
 	
 	typedef struct

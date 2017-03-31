@@ -553,6 +553,7 @@ uint8 FtpMain(void)
 			ftp_struct.ftp_delaywait_time 	= 0;
 			ftp_struct.ftp_rx_len = 0;
 			ftp_struct.ftp_rx_file_byte_counter = 0;
+			ftp_struct.ftp_upgrade_success_flag = 0;
 		}
 		break;
 		
@@ -672,7 +673,10 @@ uint8 FtpMain(void)
 		{
 			res = FtpFTPQUIT();
 			if(res == RES_TRUE)
+			{
 				ftp_struct.ftp_txstep = e_ftpend;
+				ftp_struct.ftp_upgrade_success_flag = 1;
+			}
 			else if(res == RES_FALSE) 	
 				goto RETURN_LAB;	
 		}

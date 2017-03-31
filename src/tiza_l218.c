@@ -4,6 +4,7 @@
 #define GPS_DEBUG
 
 #define L218_GLOBAL
+#define BOOT_GLOBAL
 #define L218_DEBUG
 #include "tiza_include.h"
 
@@ -2063,13 +2064,32 @@ void ModlueCalledProcess(void)
 		{
 			OSTimeDlyHMSM(0, 0, 0, 2);
 			FtpMain();
-			if(ftp_struct.ftp_upgrade_fail_flag == 1)
+			if((ftp_struct.ftp_upgrade_fail_flag == 1) || (ftp_struct.ftp_upgrade_success_flag == 1))
 			{	
 				test_ProgramUpgrade_flag = 0;
 				run = 0;
 			}
 		}
-	}		
+	}	
+
+	if(ftp_struct.ftp_upgrade_success_flag == 1)
+	{//-成功获取更新代码,置标志位,让boot升级
+		res = FlashErase(BOOT_PARA_START_ADDR);
+		if(res)
+		{
+			boot_struct.program_update_flag = VALID_VAL_DWORD_AA;
+			boot_struct.sys_para_init_flag = INVALID_VAL_DWORD_55;
+			res = FlashWrite(BOOT_PARA_START_ADDR,(uint8*)&boot_struct.program_update_flag,12);
+			if(res)
+			{
+				ftp_struct.ftp_upgrade_success_flag = 0;
+				LocalUartFixedLenSend((uint8*)"Device upgrade success\r\n",StrLen((uint8*)"Device upgrade success\r\n",0));
+			}
+			else
+				LocalUartFixedLenSend((uint8*)"Device upgrade fail\r\n",StrLen((uint8*)"Device upgrade fail\r\n",0));
+		}
+
+	}
 } 
 
 

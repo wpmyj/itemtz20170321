@@ -53,6 +53,7 @@
 //	#include "sms.h"
 //	#include "rs232.h"
 //	#include "localcomm.h"
+#include "boot.h"
 //	
 
 	#define RES_FALSE		0
