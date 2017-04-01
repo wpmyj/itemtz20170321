@@ -46,6 +46,7 @@
 				e_SETDLAFile,
 				e_DLAFile,
 				e_FTPQUIT,
+				e_FTPSIZE,
 				
 				e_ftpend,
 			}FTP_TX_STEP;

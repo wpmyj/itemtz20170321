@@ -80,6 +80,7 @@
       AT_FTPGET1_INDEX,
       AT_FTPGET2_INDEX,
       AT_FTPQUIT_INDEX,
+      AT_FTPSIZE_INDEX,
 			
 		}AT_CMD_INDEX;
 	///AT指令处理函数---start
@@ -129,6 +130,7 @@
 		void AtFTPGET1Fun(uint8 *data,uint16 len,uint8 flag);
 		void AtFTPGET2Fun(uint8 *data,uint16 len,uint8 flag);
 		void AtFTPQUITFun(uint8 *data,uint16 len,uint8 flag);
+		void AtFTPSIZEFun(uint8 *data,uint16 len,uint8 flag);
 		
 	///AT指令处理函数---end
 //		void L218SendAtCmd(uint8 cmd_index,uint8 app_data[],uint8 app_len,uint8 mat_data[],uint8 mat_len);

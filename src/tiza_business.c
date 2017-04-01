@@ -245,7 +245,9 @@ void L218_task(void *pdata)
 	{
 		OSTimeDlyHMSM(0, 0, 2, 0);
 		
-		ExecuteModuleTask();		
+		ExecuteModuleTask();	
+
+		//-LocalUartFixedLenSend((uint8*)"FTP success...\r\n",StrLen((uint8*)"FTP success...\r\n",0));
 	}
 }
 
