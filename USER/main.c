@@ -136,8 +136,8 @@ void led0_task(void *pdata)
 		OSTimeDlyHMSM(0, 0, 1, 0);
 		FeedWtd();
 		
-		printf("\r\n g_pro_struct.over3_relogin_time = %d \r\n",g_pro_struct.over3_relogin_time);
-		printf("\r\n g_pro_struct.try_login_statu = %d \r\n",g_pro_struct.try_login_statu);
+		//-printf("\r\n g_pro_struct.over3_relogin_time = %d \r\n",g_pro_struct.over3_relogin_time);
+		//-printf("\r\n g_pro_struct.try_login_statu = %d \r\n",g_pro_struct.try_login_statu);
 	};
 }
 

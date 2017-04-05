@@ -513,10 +513,36 @@ static uint8 FtpDLAFile(void)
 {
 	uint8 res=RES_WAIT;
 	uint8 TEMP_file_size[32] = "2,1024\x0d";
-	uint8 TEMP_OK_ACK[32] = "\x0d\x0a\x0d\x0a+FTPGET: 1,";
-	
+	uint8 TEMP_OK_ACK[32];
+	//-uint8 TEMP_OK_ACK[32] = "+FTPGET: 1,";
 
-	L218SendAtCmd(AT_FTPGET2_INDEX,TEMP_file_size,7,(uint8 *)TEMP_OK_ACK,15);
+	TEMP_OK_ACK[0] = '\x0d';
+	TEMP_OK_ACK[1] = '\x0a';
+
+	TEMP_OK_ACK[2] = 'O';
+	TEMP_OK_ACK[3] = 'K';
+
+	TEMP_OK_ACK[4] = '\x0d';
+	TEMP_OK_ACK[5] = '\x0a';
+	TEMP_OK_ACK[6] = '\x0d';
+	TEMP_OK_ACK[7] = '\x0a';
+	TEMP_OK_ACK[8] = '\x0d';
+	TEMP_OK_ACK[9] = '\x0a';
+
+	TEMP_OK_ACK[10] = '+';
+	TEMP_OK_ACK[11] = 'F';
+	TEMP_OK_ACK[12] = 'T';
+	TEMP_OK_ACK[13] = 'P';
+	TEMP_OK_ACK[14] = 'G';
+	TEMP_OK_ACK[15] = 'E';
+	TEMP_OK_ACK[16] = 'T';
+	TEMP_OK_ACK[17] = ':';
+	TEMP_OK_ACK[18] = ' ';
+	TEMP_OK_ACK[19] = '1';
+	TEMP_OK_ACK[20] = ',';
+	TEMP_OK_ACK[21] = '\0';
+
+	L218SendAtCmd(AT_FTPGET2_INDEX,TEMP_file_size,7,(uint8 *)TEMP_OK_ACK,StrLen(TEMP_OK_ACK,0));
 	
 	if(g_at_cmd_struct[AT_FTPGET2_INDEX].exe_flag == EXE_OK)
 		res = RES_TRUE;

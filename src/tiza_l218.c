@@ -85,6 +85,7 @@ const uint8 AT_FTPPORT[]        = {"AT+FTPPORT=21\x0d"};				///服务器端口
 const uint8 AT_FTPUN[] 			= {"AT+FTPUN=\"Vehicle\"\x0d"};							///USER
 const uint8 AT_FTPPW[] 			= {"AT+FTPPW=\"Vehicle#*\"\x0d"};							///PASSWORD
 const uint8 AT_FTPGETNAME[] 	= {"AT+FTPGETNAME=\"TIZA_FTP.bin\"\x0d"};	//-Set the file name in FTP server
+//-const uint8 AT_FTPGETNAME[] 	= {"AT+FTPGETNAME=\"TIZA_FTP_test.bin\"\x0d"};
 //-const uint8 AT_FTPGETNAME[] 	= {"AT+FTPGETNAME=\"TIZA_XGDL_SBJ_V803_170306.bin\"\x0d"};	//-Set the file name in FTP server
 const uint8 AT_FTPGETPATH[] 	= {"AT+FTPGETPATH=\"/\"\x0d"};	//-Set the path of file
 const uint8 AT_FTPGET1[] 		= {"AT+FTPGET=1\x0d"};	//-
@@ -685,11 +686,11 @@ void AtFTPGET1Fun(uint8 *data,uint16 len,uint8 flag)
 void AtFTPGET2Fun(uint8 *data,uint16 len,uint8 flag)
 {
     uint8 i = 0,j = 0,cmp_data[] = {"+FTPGET: 2,"},cmp_data3[] = {"+FTPGET: 1,1"};
-	uint16 flash_len = 0,mat_index = 0,rx_len = 0,source_head = 0,source_end = 0;
-	uint8 count,time,ack_flag = FALSE,rx_data[L218_MAX_BUF_LEN];
+	uint16 flash_len = 0,mat_index = 0,rx_len = 0,source_head = 0,end_head = 0,time;
+	uint8 ack_flag = FALSE,rrx_data[L218_MAX_BUF_LEN];
 
 	
-    g_at_cmd_struct[AT_FTPGET2_INDEX].exe_flag = EXE_FAIL;
+	g_at_cmd_struct[AT_FTPGET2_INDEX].exe_flag = EXE_FAIL;
 
 	mat_index = SubMatch(cmp_data,StrLen(cmp_data,0),data,len);	//-获取字节长度数据,而且必须有复杂错误
 	if(mat_index > 0)
@@ -703,23 +704,29 @@ void AtFTPGET2Fun(uint8 *data,uint16 len,uint8 flag)
 			j++;
 		}
 		source_head = mat_index + i + 4;	//-指向内容开始的地方
-		source_end = source_head + flash_len + 2 + 8;	//-指向了+FTPGET:1,的开始位置
-		if(len < source_end + 11)	//-说明没有接受全需要继续直到接收结束
+		end_head = source_head + flash_len + 2 + 8;	//-指向了+FTPGET:1,的开始位置
+		if((end_head > L218_MAX_BUF_LEN) || (flash_len > 1024))
+		{
+			ReadOverTailIndex(len);
+			return;	
+		}	
+			
+		if(len < end_head + 11)	//-说明没有接受全需要继续直到接收结束
 		{
 			for(time=0;time<g_at_cmd_struct[AT_FTPGET2_INDEX].max_ms_wait;time++)
 			{
-				OSTimeDlyHMSM(0, 0, 0, WAIT_100MS);
-				rx_len = L218UartIsRxDone(rx_data,L218_MAX_BUF_LEN);
-				if(rx_len > source_end + 11)
+				OSTimeDlyHMSM(0, 0, 0, 100);
+				rx_len = L218UartIsRxDone(rrx_data,L218_MAX_BUF_LEN);
+				if(rx_len > end_head + 11)
 				{
 					ack_flag = TRUE;
-					data = rx_data;
+					data = rrx_data;
 					break;
 				}
 			}
 			if(!ack_flag)
 			{
-				ReadOverTailIndex(len);
+				ReadOverTailIndex(rx_len);
 				return;
 			}
 		}
@@ -748,8 +755,8 @@ void AtFTPGET2Fun(uint8 *data,uint16 len,uint8 flag)
 		}
 		else
 		{
-			//-mat_index = SubMatch(cmp_data3,StrLen(cmp_data3,0),data + source_end,len - source_end);	//-保证是尾部而不是数据部分
-			//-if(mat_index > 0)
+			mat_index = SubMatch(cmp_data3,StrLen(cmp_data3,0),data + end_head,len - end_head);	//-保证是尾部而不是数据部分
+			if(mat_index > 0)
 				g_at_cmd_struct[AT_FTPGET2_INDEX].exe_flag = EXE_CONTINUE;	//-需要增加超时退出
 		}
 		
@@ -815,8 +822,8 @@ void AtFTPSIZEFun(uint8 *data,uint16 len,uint8 flag)
 //                    AT指令序列      附加数据      附加数据长度     匹配数据      匹配数据长度
 void L218SendAtCmd(uint8 cmd_index,uint8 app_data[],uint8 app_len,uint8 mat_data[],uint8 mat_len)
 {
-	uint8 count,time,ack_flag = FALSE,rx_data[L218_MAX_BUF_LEN];
-	uint16 rx_len = 0,mat_index = 0;
+	uint8 count,ack_flag = FALSE,rx_data[L218_MAX_BUF_LEN];
+	uint16 rx_len = 0,rx_pt = 0,time,mat_index = 0;
 	
 	g_at_cmd_struct[cmd_index].exe_flag = EXE_NO;
 	//指令发送次数
@@ -828,20 +835,25 @@ void L218SendAtCmd(uint8 cmd_index,uint8 app_data[],uint8 app_len,uint8 mat_data
 			GprsUartFixedLenSend(app_data,app_len);
 		}		
 		#ifdef L218_DEBUG
+			LocalUartFixedLenSend((uint8*)"\r\nSEND AT...\r\n",StrLen((uint8*)"\r\nSEND AT...\r\n",0));
 			LocalUartFixedLenSend(g_at_cmd_struct[cmd_index].cmd_text,StrLen(g_at_cmd_struct[cmd_index].cmd_text,0));
 			if(app_len > 0){
 				LocalUartFixedLenSend(app_data,app_len);
 			}
+			LocalUartFixedLenSend((uint8*)"\r\nSEND AT END...\r\n",StrLen((uint8*)"\r\nSEND AT END...\r\n",0));
 		#endif
 		//延时等待应答
+		rx_pt = 0;
 		for(time=0;time<g_at_cmd_struct[cmd_index].max_ms_wait;time++)
 		{
 			OSTimeDlyHMSM(0, 0, 0, WAIT_100MS);
+			//-OSTimeDlyHMSM(0, 0, 0, 200);
 			rx_len = L218UartIsRxDone(rx_data,L218_MAX_BUF_LEN);
 			if(rx_len > 0)
 			{
 				#ifdef L218_DEBUG
-					LocalUartFixedLenSend(rx_data,rx_len);
+					//-LocalUartFixedLenSend(rx_data + rx_pt,rx_len - rx_pt);
+					//-rx_pt = rx_len;
 				#endif
 				mat_index = SubMatch(mat_data,mat_len,rx_data,rx_len);
 				if(mat_index > 0){
@@ -862,6 +874,7 @@ void L218SendAtCmd(uint8 cmd_index,uint8 app_data[],uint8 app_len,uint8 mat_data
 uint16 L218UartIsRxDone(uint8 data[],uint16 len)	//-主动查询是否有需要的内容
 {
 	uint16 count=0,index;
+	static uint16 rx_head_pt = 0;
 	
 	if(g_gprs_uart_struct.rx_head != g_gprs_uart_struct.rx_tail)
 	{//有数据
@@ -876,6 +889,11 @@ uint16 L218UartIsRxDone(uint8 data[],uint16 len)	//-主动查询是否有需要的内容
 //		printf("GPRS UART Received data: ");
 //		LocalUartFixedLenSend(data, count);
 //		printf(" \r\n");	
+		while(rx_head_pt != g_gprs_uart_struct.rx_head)
+		{
+			LocalUartFixedLenSend(&g_gprs_uart_struct.rx_buf[rx_head_pt], 1);
+			rx_head_pt = (rx_head_pt + 1) % GPRS_UART_BUF_LEN;
+		}
 		#endif		
 		
 	}

@@ -306,7 +306,7 @@ GPS_EXTERN 	GPS_STRUCT g_gps_struct;
 
 
 
-//#define L218_DEBUG_qlj
+#define L218_DEBUG_qlj
 
 
 GPS_EXTERN 	const uint8 RECV_IPD_ACK[];       		// RECV DATA LEN, ADD "+IPD" HEADER
