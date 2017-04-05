@@ -743,7 +743,7 @@ void AtFTPGET2Fun(uint8 *data,uint16 len,uint8 flag)
 				MemCpy(TEMPF_DATA_FROM_FTP,TEMPF_DATA_FROM_FTP + ftp_struct.ftp_rx_len,ftp_struct.ftp_rx_len);
 		}
 
-		if(ftp_struct.ftp_rx_file_byte_counter >= boot_struct.program_total_size)	//-判断是继续还是结束
+		if(ftp_struct.ftp_rx_file_byte_counter == boot_struct.program_total_size)	//-判断是继续还是结束
 		{//-考虑增加结束符判断
 			g_at_cmd_struct[AT_FTPGET2_INDEX].exe_flag = EXE_OK;
 			if(ftp_struct.ftp_rx_len)
@@ -752,6 +752,11 @@ void AtFTPGET2Fun(uint8 *data,uint16 len,uint8 flag)
 				ftp_struct.ftp_rx_len = 0;
 				ftp_struct.ftp_rx_file_byte_counter = 0;
 			}
+		}
+		else if(ftp_struct.ftp_rx_file_byte_counter > boot_struct.program_total_size)	//-出错
+		{//-
+			ReadOverTailIndex(rx_len);
+			return;
 		}
 		else
 		{
