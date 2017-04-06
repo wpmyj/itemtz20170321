@@ -154,10 +154,10 @@ AT_CMD_STRUCT g_at_cmd_struct[] =
 		{(uint8 *)AT_FTPPW,    		   	3,	 1*SEND_1T,	EXE_NO,	AtFTPPWFun},
 		{(uint8 *)AT_FTPGETNAME,    	3,	 1*SEND_1T,	EXE_NO,	AtFTPGETNAMEFun},
 		{(uint8 *)AT_FTPGETPATH,    	3,	 1*SEND_1T,	EXE_NO,	AtFTPGETPATHFun},
-		{(uint8 *)AT_FTPGET1,    	  100,	 1*SEND_1T,	EXE_NO,	AtFTPGET1Fun},
+		{(uint8 *)AT_FTPGET1,    	  150,	 1*SEND_1T,	EXE_NO,	AtFTPGET1Fun},
 		{(uint8 *)AT_FTPGET2,    	  100,	 10*SEND_1T,	EXE_NO,	AtFTPGET2Fun},
 		{(uint8 *)AT_FTPQUIT,    	    3,	 1*SEND_1T,	EXE_NO,	AtFTPQUITFun},
-		{(uint8 *)AT_FTPSIZE,    	    100,	 1*SEND_1T,	EXE_NO,	AtFTPSIZEFun},
+		{(uint8 *)AT_FTPSIZE,    	   150,	 1*SEND_1T,	EXE_NO,	AtFTPSIZEFun},
 };
 static void ReadOverTailIndex(uint16 len)
 {
@@ -740,7 +740,7 @@ void AtFTPGET2Fun(uint8 *data,uint16 len,uint8 flag)
 			CpuFlashWrite(FTP_BLIND_FLASH_START+((ftp_struct.ftp_rx_file_byte_counter / 2048) - 1) * 2048,TEMPF_DATA_FROM_FTP, 2048);
 			ftp_struct.ftp_rx_len -= 2048;
 			if(ftp_struct.ftp_rx_len)
-				MemCpy(TEMPF_DATA_FROM_FTP,TEMPF_DATA_FROM_FTP + ftp_struct.ftp_rx_len,ftp_struct.ftp_rx_len);
+				MemCpy(TEMPF_DATA_FROM_FTP,TEMPF_DATA_FROM_FTP + 2048,ftp_struct.ftp_rx_len);
 		}
 
 		if(ftp_struct.ftp_rx_file_byte_counter == boot_struct.program_total_size)	//-判断是继续还是结束
