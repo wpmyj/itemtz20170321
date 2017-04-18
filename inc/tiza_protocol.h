@@ -9,7 +9,12 @@
 	#else
 		#define PROTOCOL_EXTERN extern
 	#endif
-
+/*
+驱动电机个数 1
+储能子系统个数  1
+单体电池总数		96   /4 = 24
+探针个数				24	 /8 = 3
+*/
 	///上行命令ID	
 	#define PRO_UP_LOGIN_ID						0X01		///车辆登入
 	#define PRO_UP_REAL_INFO_ID				0X02		///实时信息上报
@@ -81,7 +86,7 @@
 			uint16 login_number;								//登入流水号	+1 最大65531
 			uint8  SIM_ICCID[20];								//终端从SIM获得的ICCID
 			uint8  storage_num;									//可充电储能子系统数n=0~250
-			uint8  storage_len;									//可充电储能子系统数m=0~50;0表示不上传该编码
+			uint8  storage_len;									//可充电储能子系统编码长度m=0~50;0表示不上传该编码
 //			uint8* storage_code;								//可充电储能系统编码，终端从获取
 			
 		}Item;
@@ -94,17 +99,17 @@
 		uint8 arry[20];
 		
 		struct{
+			uint32 mileage;				//累计里程			0~9999999(0~999999.9km)    FFFFFFFE异常  FFFFFFFF无效
+			uint16 speed;					//车速					0~2200(0~220km/h) FFFE异常 FFFF无效
+			uint16 voltage;				//总电压				0~10000(0~1000V)  FFFE异常 FFFF无效
+			uint16 current;				//总电流				0~20000(-1000~+1000A)      FFFE异常      FFFF无效
+			uint16 resistance;		//绝缘电阻			0~60000(0~60000kO)
 			uint8  vehicle;				//车辆状态			01启动   02熄火   03其他   FE异常 FF无效
 			uint8  charge;				//充电状态			01停车充 02行驶充 03未充态 04充完 FE异常 FF无效
 			uint8  mode;					//运行模式			01纯电   02混动   03燃油   FE异常 FF无效
-			uint16 speed;					//车速					0~2200(0~220km/h) FFFE异常 FFFF无效
-			uint32 mileage;				//累计里程			0~9999999(0~999999.9km)    FFFFFFFE异常  FFFFFFFF无效
-			uint16 voltage;				//总电压				0~10000(0~1000V)  FFFE异常 FFFF无效
-			uint16 current;				//总电流				0~20000(-1000~+1000A)      FFFE异常      FFFF无效
 			uint8  SOC;						//SOC						0~100(0%~100%)		FE异常   FF无效
 			uint8  DC_statu;			//DC/DC状态			01工作   02断开   FE异常   FF无效
 			union08 stall;				//档位					b5:1/0有/无驱动力  b4:1/0有/无制动力 L:0空 1~C档 D倒 E自动d档 F停车p档 
-			uint16 resistance;		//绝缘电阻			0~60000(0~60000kO)
 			uint8  Accelerate;		//加速踏板行程值0~100(0%~100%)    FE异常   FF无效
 			uint8  braking;				//制动踏板状态	0~100(0%~100%)    00制动关 65制动有效    FE异常  FF无效
 		}Item;
@@ -119,16 +124,16 @@
 			uint8  serial;										//驱动电机序号	1~253
 			uint8  status;										//状态					01耗电 02发电 03关闭态 04准备态 FE异常 FF无效
 			uint8  ctr_tem;										//控制器温度		0~250(-40~+210℃)								FE异常 FF无效
+			uint8  motor_tem;									//驱动电机温度	0~250(-40~+210℃)								FE异常 FF无效
 			uint16 rpm;												//转速					0~65531(-20000~+45531r/min)	FFFE异常 FFFF无效
 			uint16 torque;										//转矩					0~65531(-2000~+4553.1Nm)		FFFE异常 FFFF无效
-			uint8  motor_tem;									//驱动电机温度	0~250(-40~+210℃)								FE异常 FF无效
 			uint16 ctr_in_vol;								//控制器输入电压0~60000(0~6000V)						FFFE异常 FFFF无效
 			uint16 ctr_bus_cur;								//控制器母线电流0~20000(-1000~+1000A)				FFFE异常 FFFF无效
 		}Item;
 	}PRO_MOTOR_UNION;
 	
 	///燃料电池数据
-	#define PRO_FTPROBE_NUMBER					2				//燃料电池数据——温度探针个数	
+	#define PRO_FTPROBE_NUMBER					24				//燃料电池数据——温度探针个数	
 	PROTOCOL_EXTERN uint8 g_TProbe_val[PRO_FTPROBE_NUMBER];		//探针温度值	0~240(-40~+200℃)
 	typedef union{
 		uint8 arry[18];
@@ -141,10 +146,10 @@
 			uint16 tprobe_num;								//温度探针个数	0~65531									FFFE异常 FFFF无效
 //注意改arry	uint8 g_TProbe_val[PRO_FTPROBE_NUMBER];		//探针温度值	0~240(-40~+200℃)
 			uint16 maxtem_val;								//氢系统最高温度0~2400(-40~+200℃)			FFFE异常 FFFF无效
-			uint8  maxtem_id;								  //最高温度探针号0~252										FE异常 		FF无效
 			uint16 maxconcent;								//氢气最高浓度	0~60000(0~50000mg/kg)		FFFE异常 FFFF无效
-			uint8  maxconcent_id;						  //最高浓度传感号0~252										FE异常 		FF无效
 			uint16 maxpre_val;								//氢气最高压力	0~1000(0~100MPa)				FFFE异常 FFFF无效
+			uint8  maxtem_id;								  //最高温度探针号0~252										FE异常 		FF无效
+			uint8  maxconcent_id;						  //最高浓度传感号0~252										FE异常 		FF无效
 			uint8  maxpre_id;									//最高压力传感号0~252										FE异常 		FF无效
 			uint8  preDCstatu;								//高压DCDC状态	01工作 02断开 FE异常 FF无效
 			}Item;
@@ -155,9 +160,9 @@
 		uint8 arry[5];
 		
 		struct{
-			uint8  status;								//发动机状态		01启动态 02关闭态 FE异常 FF无效								
 			uint16 rpm;										//曲轴转速			0~60000(0~60000r/min)		FFFE异常 FFFF无效
 			uint16 consumpt;							//消耗率				0~60000(0~600L/100km)		FFFE异常 FFFF无效
+			uint8  status;								//发动机状态		01启动态 02关闭态 FE异常 FF无效								
 			}Item;
 	}PRO_ENGINE_UNION;	
 	
@@ -165,10 +170,10 @@
 	typedef union{
 		uint8 arry[9];
 		
-		struct{
-			union08  status;							//定位状态	b0:1/0无/有效定位	b1:1/0南/北纬	b2:1/0西/东经				
+		struct{		
 			uint32 longitude;							//经度			以度为单位*10^6，精确到百万分之一度
 			uint32 latitude;							//纬度			同上
+			union08  status;							//定位状态	b0:1/0无/有效定位	b1:1/0南/北纬	b2:1/0西/东经		
 			}Item;
 	}PRO_POSTION_UNION;	
 	
@@ -193,20 +198,20 @@
 	}PRO_EXTREME_UNION;	
 	
 	///报警数据
-	#define PRO_ASTORAGE_MAXNUMBER				10					//报警数据——可充电储能装置故障个数	
-	#define PRO_AMOTOR_MAXNUMBER					10					//报警数据——驱动电机故障个数	
-	#define PRO_AENFINE_MAXNUMBER					10					//报警数据——发动机故障个数	
-	#define PRO_AOTHERS_MAXNUMBER					10					//报警数据——其他故障个数	
+	#define PRO_ASTORAGE_MAXNUMBER				4					//报警数据——可充电储能装置故障个数	
+	#define PRO_AMOTOR_MAXNUMBER					4					//报警数据——驱动电机故障个数	
+//	#define PRO_AENFINE_MAXNUMBER					0					//报警数据——发动机故障个数	
+	#define PRO_AOTHERS_MAXNUMBER					4					//报警数据——其他故障个数	
 	PROTOCOL_EXTERN uint32 g_storage_alr[PRO_ASTORAGE_MAXNUMBER];	//可充电储能装置故障码	自定义
 	PROTOCOL_EXTERN uint32 g_motro_alr[PRO_AMOTOR_MAXNUMBER];			//驱动电机故障码				自定义
-	PROTOCOL_EXTERN uint32 g_engine_alr[PRO_AENFINE_MAXNUMBER];		//发动机故障码					自定义
+//	PROTOCOL_EXTERN uint32 g_engine_alr[PRO_AENFINE_MAXNUMBER];		//发动机故障码					自定义
 	PROTOCOL_EXTERN uint32 g_others_alr[PRO_AOTHERS_MAXNUMBER];		//其他故障码						自定义
 	typedef union{
 		uint8 arry[9];
 		
 		struct{
-			uint8  rank;					//最高报警等级					00无故障 1~3:几级故障 FE异常 FF无效		等级故障自定义
 			union32 flag;					//通用报警标志					b0~b18:0正常/1报警   b19~b31:预留
+			uint8  rank;					//最高报警等级					00无故障 1~3:几级故障 FE异常 FF无效		等级故障自定义
 			uint8  storagenum;		//可充电储能装置故障数	0~252										FE异常 		FF无效
 			uint8  motornum;			//驱动电机故障数				0~252										FE异常 		FF无效
 			uint8  enginenum;			//发动机故障数					0~252										FE异常 		FF无效
@@ -215,25 +220,25 @@
 	}PRO_ALARM_UNION;	
 	
 	///可充电电池电压数据
-	#define PRO_BATTSYS_NUMBER						2						//可充电储能装置电压数据格式——可充电储能子系统个数	
-	#define PRO_SIGBATT_MAXNUMBER					20					//本帧单体电池总数
+	#define PRO_BATTSYS_NUMBER						1						//可充电储能装置电压数据格式——可充电储能子系统个数	
+	#define PRO_SIGBATT_MAXNUMBER					96					//本帧单体电池总数
 	PROTOCOL_EXTERN uint16 g_sigbatt_val[PRO_BATTSYS_NUMBER][PRO_SIGBATT_MAXNUMBER];		//单体电池电压		0~60000(0~60.000V)	FFFE异常 FFFF无效
 	typedef union{//可充电储能子系统电压信息列表
 		uint8 arry[10];
 		
 		struct{
 			uint8  serial;								//子系统号					1~250
+			uint8  framebatt_num;					//本帧单体电池总数	1~200										FE异常 FF无效
 			uint16 voltage;								//装置电压					0~10000(0~1000V)			FFFE异常 FFFF无效
 			uint16 current;								//装置电流					0~20000(-1000~+1000A)	FFFE异常 FFFF无效
 			uint16 sigbatt_num;						//单体电池总数			1~65531								FFFE异常 FFFF无效
 			uint16 framebatt_id;					//本帧起始电池号		1~65531								FFFE异常 FFFF无效	单帧最多200个
-			uint8  framebatt_num;					//本帧单体电池总数	1~200										FE异常 FF无效
 		}Item;
 	}PRO_VBATTSYS_UNION;
 	
 	///可充电电池温度数据
 	/*可充电储能子系统个数	同电压数据上所示*/
-	#define PRO_BTPROBE_MAXNUMBER					20				//可充电温度探针个数
+	#define PRO_BTPROBE_MAXNUMBER					24				//可充电温度探针个数
 	PROTOCOL_EXTERN uint8 g_btprobe_val[PRO_BATTSYS_NUMBER][PRO_BTPROBE_MAXNUMBER];		//各探针温度值		0~250(-40~+210℃)		FE异常 FF无效
 	typedef union{//可充电储能子系统温度信息列表
 		uint8 arry[3];
@@ -251,7 +256,7 @@
 	
 	///车辆登出数据格式
 	typedef union{
-		uint8 arry[34];
+		uint8 arry[8];
 		
 		struct{
 			PRO_TIME_UNION time_union;					//数据采集时间
@@ -267,6 +272,7 @@
 	#define PRO_ACK_INDEX						 3	//应答标志下标
 	#define PRO_DATALEN_INDEX				22	//数据长度下标
 	#define PRO_DATA_INDEX					24	//数据开始下标
+	#define PRO_TIME_INDEX1					24	//时间开始下标1
 	
 	PROTOCOL_EXTERN uint8 g_VIN[17];		//车辆唯一VIN
 	PROTOCOL_EXTERN PRO_TIME_UNION 				g_protime_union;
@@ -307,11 +313,11 @@
 	//0x80~0xFE		用户自定义
 	
 	///参数值
-	#define PRO_DOMAINLEN_MAX		30						///平台或公共平台域名最大长度 暂定
-	PROTOCOL_EXTERN const uint8  g_para_HDVers[5];		//硬件版本号	R只读
-	PROTOCOL_EXTERN const uint8  g_para_SFVers[5];		//固件版本号	R只读
+	#define PRO_DOMAINLEN_MAX			30											///平台或公共平台域名最大长度 暂定
+	#define PRO_PARA_UNION_LEN		90  //19+2*PRO_DOMAINLEN_MAX+11		///参数设置结构总长度
+
 	typedef union{
-		uint8 arry[14+2*PRO_DOMAINLEN_MAX];
+		uint8 arry[PRO_PARA_UNION_LEN];
 		
 		struct{
 			uint16 SavePeri;									//终端本地保存周期							0~60000(0~60000ms)			FFFE异常 FFFF无效
@@ -319,8 +325,8 @@
 			uint16 AlrUpPeri;									//报警时上传周期								0~60000(0~60000ms)			FFFE异常 FFFF无效
 			uint8  DomainLen;									//平台域名长度									 										
 			uint8  Domain[PRO_DOMAINLEN_MAX];	//平台域名											 
-			uint16 Port;											//平台端口											0~65531(0~15V)					FFFE异常 FFFF无效
 			uint8  HeartPeri;									//终端心跳发送周期							1~240(1~240s)						FE异常 		FF无效
+			uint16 Port;											//平台端口											0~65531(0~15V)					FFFE异常 FFFF无效
 			uint16 TAckTim;										//终端应答超时时间							1~600(1~600s)						FFFE异常 FFFF无效
 			uint16 PAckTim;										//平台应答超时时间							1~600(1~600s)						FFFE异常 FFFF无效
 			uint8  NLogTim;										//3次失败登录下次登录时间间隔		1~240(1~24min)					FE异常 		FF无效
@@ -328,6 +334,10 @@
 			uint8  PDomain[PRO_DOMAINLEN_MAX];//公共平台域名									
 			uint16 PPort;											//公共平台端口									0~65531(0~15V)					FFFE异常 FFFF无效
 			uint8  Monitor;										//是否抽样检测中								01抽样检测中 02不在抽样检测中	FE异常 		FF无效
+			
+			uint8  g_para_HDVers[5];		//硬件版本号	R只读			
+			uint8  g_para_SFVers[5];		//固件版本号	R只读
+			uint8  check;							//校验码  保存读取用
 			}Item;
 	}PRO_PARA_UNION;
 	
@@ -354,9 +364,9 @@
 		uint8  HDVers[5];//硬件版本号*5
 		uint8  SFVers[5];//软件版本号*5
 		uint8  file_path[64];		//升级URL地址
-		uint32 overtime;				//连接到升级服务器时限min
+		uint16 overtime;				//连接到升级服务器时限min
 		
-		uint8 flag;							//自添加，1需要升级 2正在升级
+		uint8 flag;							//自添加，1需要升级 2正在升级 0无效
 	}PRO_UPGREAD_STRUCT;
 	
 	
@@ -369,7 +379,7 @@
 ////////////////////////////////////////////////////////////////////////////////	
 	
 	#define PRO_MAX_TX_BUF_ARRAY 					4			///最大4个发送缓存
-	#define PRO_MAX_TX_BUF_COUNTER 				600		///每个发送缓存最大600字节
+	#define PRO_MAX_TX_BUF_COUNTER 				520		///每个发送缓存最大600字节
 	#define PRO_NORMAL_RETX_TIME					8			///8秒重发机制
 	#define PRO_OVER3_RELOGIN_TIME				1800	///三次登录失败后30min重新登录
 //	#define PRO_ACC_ON_MAX_TX_BUF_COUNTER	256
@@ -381,7 +391,7 @@
 		uint8  re_tx_counter[PRO_MAX_TX_BUF_ARRAY];
 		uint8  re_tx_sec_counter[PRO_MAX_TX_BUF_ARRAY];						//重发间隔秒计数
 		uint8  re_tx_time[PRO_MAX_TX_BUF_ARRAY];									//重发时间间隔	
-		uint8  re_tx_full_flag[PRO_MAX_TX_BUF_ARRAY];
+		uint8  re_tx_full_flag[PRO_MAX_TX_BUF_ARRAY];							//有数据标志
 	}TX_STRUCT;
 	typedef struct
 	{
@@ -389,15 +399,14 @@
 		// uint8 comm_para_ip[4];///均衡IP
 		// uint8 comm_para_port[2];///均衡PORT
 		uint8  try_login_statu;								///登录状态标志 0初始 1使能 2正在登录 3已登录 4正在登出 5已登出 6无效
-		uint16 over3_relogin_time;						///三次登录失败后重新登录时间间隔
-		uint8 login_center_flag;							///登录中心成功标志
-		// uint8 tx_lsnal_data_flag;						///1:有盲区数据正在发送
+		uint8  login_center_flag;							///登录中心成功标志
+		uint8  tx_lsnal_data_flag;						///上一条指令应答成功使能检测有无盲区数据发送   1:使能
 		// uint8 setup_link_falg;///TRUE,成功与中心建立连接
 		// uint8 link_center_ip_index;///TRUE,链接主中心，FALSE是副中心
 		// uint8 link_master_ip_counter;///连接主中心计数
 		
 		// uint8 tx_flash_lsnal_falg;///发送的保存在FLASH中的盲区数据标志
-		uint8 tx_lsnal_falg;									///1:有盲区数据正在发送
+		uint8 tx_one_lsnal_falg;							///从EXTFLASH中读出的一条盲区记录正在发送   		1:在发送	0无效
 		// uint16 no_rx_data_sec_counter;///没有收到数据计数
 		// uint16 tx_seq;
 		// uint16 tx_len;
@@ -422,6 +431,8 @@
 //		uint16 tailsector;							//段号(暂给6M，0~1535)
 	}SYS_LSNAL_STRUCT;
 		
+		
+	
 	PROTOCOL_EXTERN SYS_LSNAL_STRUCT g_syslsnal_struct;
 	PROTOCOL_EXTERN PRO_STRUCT			 g_pro_struct;
 		
@@ -430,19 +441,21 @@
 	#define TMP_BUFF_MAXLEN				LSNAL_PAGE_SIZE	
 	typedef struct	
 	{//注意初始化
-		uint8  vehicle_start_flag;			//汽车启动标志		1启动
-		uint8  link_center_flag;				//连接平台标志		1已连接
+		uint8  vehicle_start_flag;			//汽车启动标志		1启动			0未启动
+		uint8  link_center_flag;				//连接平台标志		1已连接		0未连接
 		uint8  updata_sengding;					//数据上传标志		1正在上传 0空闲  
 	}SYS_PRIVATE_PARA_STRUCT;
 	PROTOCOL_EXTERN SYS_PRIVATE_PARA_STRUCT	g_sysprivatepara_struct;
-	
-	
+	PROTOCOL_EXTERN void ProWrite_VIN(uint8* str);
+	PROTOCOL_EXTERN uint16 Pro_RealTime_Data(uint8 data[]);
+	PROTOCOL_EXTERN void ProParaInit(void);
+	PROTOCOL_EXTERN void ProLsnalHeadTailSave(void);
 	PROTOCOL_EXTERN void ProUpRealFormation(void);
 	PROTOCOL_EXTERN void ProUpLogout(void);
 	PROTOCOL_EXTERN void ProUpHeartBeat(void);
-	PROTOCOL_EXTERN void ProParaInit(void);
+	PROTOCOL_EXTERN void ProUpCheckTime(void);
 	PROTOCOL_EXTERN void ProPacket(uint8 tx_data[],uint16 tx_len,uint8 tx_cmd,uint8 ack_flag);
 	PROTOCOL_EXTERN void ProPeriodTx(uint16 past_sec);
-	PROTOCOL_EXTERN void ProProcess(uint8 data[],uint16 len);
+	PROTOCOL_EXTERN void ProProcess(uint8 data[], uint16 len, uint16 colon);
 	
 #endif

@@ -27,6 +27,7 @@
 	
 	#include "ucos_ii.h"
 	#include "delay.h"
+	#include "math.h"
 	
 	#include "stm32f10x_it.h"
 	#include "tiza_selfdef.h"
@@ -36,8 +37,10 @@
 	#include "tiza_spi_flash.h"	
 	#include "tiza_protocol.h"
 	#include "tiza_can.h"
-	#include "syspara.h"
-	#include "systask.h"
+	#include "tiza_syspara.h"
+	#include "tiza_systask.h"
+	#include "tiza_flash.h"
+	#include "tiza_ftp.h"
 	
 	
 	
@@ -48,8 +51,6 @@
 //	#include "sim.h"
 //	#include "ppp.h"
 //	#include "fram.h"
-//	#include "flash.h"
-//	#include "ftp.h"
 //	#include "sms.h"
 //	#include "rs232.h"
 //	#include "localcomm.h"
@@ -60,8 +61,16 @@
 	#define true TRUE
 	#define NULL 0
 	
-	#define INVALID_VAL_55  0x55
-	#define VALID_VAL_AA 		0xaa
+	#define RES_FALSE		0
+	#define RES_TRUE		1
+	#define RES_WAIT		2
+	#define RES_BREAK		3
+	#define RES_DELETE	4
+	#define RES_NOFTPUP	5
+	
+	
+//	#define INVALID_VAL_55  0x55
+//	#define VALID_VAL_AA 		0xaa
 	
 	#define LEN_12 12
 	#define LEN_16 16

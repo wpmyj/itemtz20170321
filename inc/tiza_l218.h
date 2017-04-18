@@ -15,8 +15,9 @@
 		#define EXE_NO	 	0X00 ///未执行
 		#define EXE_OK	 	0X01
 		#define EXE_FAIL 	0X02
-		#define EXE_GPS_ON 		0X03
-		#define EXE_GPS_OFF 	0X04
+		#define EXE_03_ON 		0X03
+		#define EXE_04_OFF 		0X04
+		#define EXE_CONTINUE 	0X05	//FTP
 				
 		#define L218_MAX_BUF_LEN 		GPRS_UART_BUF_LEN
 		
@@ -42,6 +43,8 @@
 			AT_CSQ_INDEX,
 			AT_CREG_INDEX,
 			AT_CGATT_INDEX,
+			AT_CIICR_INDEX,
+			AT_GTPOS_INDEX,
 			AT_CMGF_INDEX,
 			AT_CMGL_INDEX,
 			AT_CMGS_INDEX,
@@ -63,8 +66,28 @@
 			AT_CIPSRIP_INDEX,
 			
 			AT_GETGPS_INDEX,
+			AT_EGDCONT2_INDEX,
+			AT_EGDCONT1_INDEX,
+			AT_MGPSTS_INDEX,
+			AT_MGPSEPO_INDEX,
 			AT_EGPSC_INDEX,
-			AT_PMTK314_INDEX,
+			AT_PMTK314_INDEX,		
+			AT_PMTK386_INDEX,		
+
+//      AT_CPIN_INDEX,
+      AT_SAPBR_INDEX,
+      AT_FTPTYPE_INDEX,
+      AT_FTPSERV_INDEX,
+      AT_FTPPORT_INDEX,
+      AT_FTPUN_INDEX,
+      AT_FTPPW_INDEX,
+      AT_FTPGETNAME_INDEX,
+      AT_FTPGETPATH_INDEX,
+      AT_FTPGET1_INDEX,
+      AT_FTPGET2_INDEX,
+      AT_FTPQUIT_INDEX,
+      AT_FTPSIZE_INDEX,			
+			
 		}AT_CMD_INDEX;
 	///AT指令处理函数---start
 		void AtFun(uint8 *data,uint16 len,uint8 flag);
@@ -78,6 +101,8 @@
 		void AtCsqFun(uint8 *data,uint16 len,uint8 flag);
 		void AtCregFun(uint8 *data,uint16 len,uint8 flag);
 		void AtCgattFun(uint8 *data,uint16 len,uint8 flag);
+		void AtCiicrFun(uint8 *data,uint16 len,uint8 flag);
+		void AtGtposFun(uint8 *data,uint16 len,uint8 flag);
 		void AtCmgfFun(uint8 *data,uint16 len,uint8 flag);
 		void AtCmglFun(uint8 *data,uint16 len,uint8 flag);
 		void AtCmgsFun(uint8 *data,uint16 len,uint8 flag);
@@ -99,14 +124,52 @@
 		void AtCipSripFun(uint8 *data,uint16 len,uint8 flag);
 		
 		void AtGetgpsFun(uint8 *data,uint16 len,uint8 flag);
+		void AtEgdcont2Fun(uint8 *data,uint16 len,uint8 flag);
+		void AtEgdcont1Fun(uint8 *data,uint16 len,uint8 flag);
+		void AtMgpstsFun(uint8 *data,uint16 len,uint8 flag);
+		void AtMgpsepoFun(uint8 *data,uint16 len,uint8 flag);
 		void AtEgpscFun(uint8 *data,uint16 len,uint8 flag);
 		void AtPmtk314Fun(uint8 *data,uint16 len,uint8 flag);
+		void AtPmtk386Fun(uint8 *data,uint16 len,uint8 flag);
+		//FTP		
+//		void AtCPINFun(uint8 *data,uint16 len,uint8 flag);
+		void AtSAPBRFun(uint8 *data,uint16 len,uint8 flag);
+		void AtFTPTYPEFun(uint8 *data,uint16 len,uint8 flag);
+		void AtFTPSERVFun(uint8 *data,uint16 len,uint8 flag);
+		void AtFTPPORTFun(uint8 *data,uint16 len,uint8 flag);
+		void AtFTPUNFun(uint8 *data,uint16 len,uint8 flag);
+		void AtFTPPWFun(uint8 *data,uint16 len,uint8 flag);
+		void AtFTPGETNAMEFun(uint8 *data,uint16 len,uint8 flag);
+		void AtFTPGETPATHFun(uint8 *data,uint16 len,uint8 flag);
+		void AtFTPGET1Fun(uint8 *data,uint16 len,uint8 flag);
+		void AtFTPGET2Fun(uint8 *data,uint16 len,uint8 flag);
+		void AtFTPQUITFun(uint8 *data,uint16 len,uint8 flag);
+		void AtFTPSIZEFun(uint8 *data,uint16 len,uint8 flag);
 	///AT指令处理函数---end
-//		void L218SendAtCmd(uint8 cmd_index,uint8 app_data[],uint8 app_len,uint8 mat_data[],uint8 mat_len);
-		uint16 L218UartIsRxDone(uint8 data[],uint16 len);
-		
-		void L218PowerInit(void);
-		void L218Reset(void);
+
+	L218_EXTERN const uint8 FTP_TYPEOFINTERCONNECT[];
+	L218_EXTERN	const uint8 FTP_SETAPN[];
+	L218_EXTERN const uint8 FTP_OPENBEARER[] ;
+
+	L218_EXTERN const uint8 RECV_IPD_ACK[];       	// RECV DATA LEN, ADD "+IPD" HEADER
+	//L218_EXTERN const uint8 RECV_FROM_ACK[];      // RECV FORM: STRING IF SET SHOW "RECV FROM" HEADER
+	L218_EXTERN const uint8 OK_ACK[];
+	L218_EXTERN const uint8 CRLF_ACK[];
+	//L218_EXTERN const uint8 CIPOPEN_EXTRA_OK[];		// IP IS OPENED SUCCESS
+	L218_EXTERN const uint8 CIPSEND_EXTRA_OK[];			// SEND SUCCESS
+	L218_EXTERN const uint8 CIPCLOSE_EXTRA_OK[];		// IP IS CLOSED SUCCESS
+	L218_EXTERN const uint8 GPRS_HAVE_RX_DATA[];		// 有接收数据
+	L218_EXTERN const uint8 CONST_DATA_1[];					// 有接收数据
+	L218_EXTERN const uint8 FTPGET_OK_ACK[];				// Open FTP session SUCCESS
+	L218_EXTERN const uint8 FTPGET_FINISH_ACK[];		// means finish read DATA
+
+	L218_EXTERN	AT_CMD_STRUCT g_at_cmd_struct[];
+	
+//	L218_EXTERN	void L218SendAtCmd(uint8 cmd_index,uint8 app_data[],uint8 app_len,uint8 mat_data[],uint8 mat_len);
+	L218_EXTERN	uint16 L218UartIsRxDone(uint8 data[],uint16 len);
+	L218_EXTERN	void ReadOverTailIndex(uint16 len);
+	L218_EXTERN	void L218PowerInit(void);
+	L218_EXTERN	void L218Reset(void);
 		
 
 //=============================================================GPRS=================GPRS=//
@@ -141,6 +204,7 @@
 		uint8  imei[SIM_CARD_IMSI_LEN];	
 		uint8* SendData;												//要发送的数据
 		uint16 SendDataLen; 	 									//要发送的数据的长度
+		uint8  setnetparaok_flag;								//设置网络参数好了标志
 	}GPRS_DATA_STRUCT;
 
 //typedef enum
@@ -211,6 +275,7 @@ typedef enum{
 GPRS_EXTERN GPRS_CTR_STRUCT g_gprs_ctr_struct;
 GPRS_EXTERN GPRS_DATA_STRUCT g_gprs_data_struct;
 
+GPRS_EXTERN uint8 GpsAssistProcess(void);
 GPRS_EXTERN void ModlueCalledProcess(void);
 
 //=============================================================GPS===================GPS=//
@@ -228,18 +293,7 @@ GPRS_EXTERN void ModlueCalledProcess(void);
 	#define SPEED_TYPE 	2
 	#define DIR_TYPE 		3
 	#define AMP_TYPE 		4
-	
-/* 	#define LAT_INDEX							0			///纬度地址，百分秒，4
-	#define LONG_INDEX						4			///经度地址，百分秒，4
-	#define SPEED_INDEX						8			///GPS速度1km/h 1
-	#define DIR_INDEX							9			///方向1
-	#define AMP_INDEX							10			///海拔
-	#define STATUS_INDEX					12			///状态4
-	#define DATE_INDEX						16			///日期起始地址
-	#define TIME_INDEX						19			///时间起始地址
-	#define GPS_INFO_LEN					(TIME_INDEX+3)///上行协议GPS信息长度
-	#define SAT_INDEX						GPS_INFO_LEN  ///卫星数量
-	*/
+
 	#define GPS_INFORM_LEN			71	 		///GPS截取信息长度
 	
 	typedef union 
@@ -270,6 +324,7 @@ GPRS_EXTERN void ModlueCalledProcess(void);
 	}GPS_STRUCT;
 
 GPS_EXTERN 	GPS_STRUCT g_gps_struct;
+
 
 
 

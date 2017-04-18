@@ -1,7 +1,8 @@
 #define CAN_GLOBAL
+#define CAN_DEBUG
 #include "tiza_include.h"
 
-
+//14个32位滤波器  
 void CanFilterInit(uint8 filter_index,uint32 can_id_1,uint32 can_id_2)
 {
 	u32 tmp_u32_val;
@@ -79,17 +80,23 @@ void CanInit(void)
 		///CAN初始化失败
 		return;
 	}
-	CanFilterInit(0,CAN_R_01,CAN_R_02);
-	CanFilterInit(1,CAN_R_03,CAN_R_04);
-	CanFilterInit(2,CAN_R_05,CAN_R_06);
-	CanFilterInit(3,CAN_R_07,CAN_R_08);
-	CanFilterInit(4,CAN_R_09,CAN_R_10);
-	CanFilterInit(5,CAN_R_11,CAN_R_12);
-	CanFilterInit(6,CAN_R_13,CAN_R_14);
-	CanFilterInit(7,CAN_R_15,CAN_R_16);
-	CanFilterInit(8,CAN_R_17,CAN_R_18);
-//	CanFilterInit(9,CAN_R_19,CAN_R_20);
-	
+	//0~13
+	CanFilterInit(0,CAN_R_03,CAN_R_04);
+	CanFilterInit(1,CAN_R_05,CAN_R_06);
+	CanFilterInit(2,CAN_R_07,CAN_R_08);
+	CanFilterInit(3,CAN_R_09,CAN_R_10);
+	CanFilterInit(4,CAN_R_11,CAN_R_12);
+	CanFilterInit(5,CAN_R_13,CAN_R_14);
+	CanFilterInit(6,CAN_R_15,CAN_R_16);
+	CanFilterInit(7,CAN_R_17,CAN_R_18);
+	CanFilterInit(8,CAN_R_19,CAN_R_20);
+	CanFilterInit(9,CAN_R_21,CAN_R_22);
+	CanFilterInit(10,CAN_R_23,CAN_R_24);
+	CanFilterInit(11,CAN_R_25,CAN_R_26);
+//	CanFilterInit(12,CAN_R_27,CAN_R_27);
+	CanFilterInit(12,CAN_R_0101,CAN_R_0160);
+	CanFilterInit(13,CAN_R_0201,CAN_R_0230);
+	 
 	CAN_ITConfig(CAN1, CAN_IT_FMP0, ENABLE);
 	
 	NVIC_InitStructure.NVIC_IRQChannel = USB_LP_CAN1_RX0_IRQn;
@@ -113,271 +120,491 @@ void CanTxData(uint8 data[],uint32 id)
 
 void CanTx(void)
 {
-//	uint8 heart_data[CAN_LOCK_DATA_LEN] = {0xFD,0x20,0x00,0x00,0x00,0x00,0x00,0x00};
-//	
-//	CanTxData(heart_data,CAN_T_1);
+	uint8 heart_data[CAN_LOCK_DATA_LEN] = {0xFD,0x20,0x00,0x00,0x00,0x00,0x00,0x00};
+	
+	CanTxData(heart_data,0X12345678);
 }
 
 void CanRx(void)
 {
 	uint8 index = 0xff;
 	CanRxMsg can_msg;
-	uint32 decode_val;
+	uint32 tmp_u32;
 	
 	CAN_Receive(CAN1,CAN_FIFO0,&can_msg);
 	
 	if(0x08 == can_msg.DLC){
-		switch(can_msg.ExtId){
-			case CAN_R_01:{//整车控制器发送状态信息一
-				index = 0;
-				break;
+		tmp_u32 = can_msg.ExtId;
+		if((tmp_u32&CAN_R1_VT) == CAN_R1_VT){													//是单体电压温度CANID
+			if(tmp_u32>=CAN_R_0101 && tmp_u32<=CAN_R_0160){				//单体电压
+				index = ((tmp_u32>>16)&0xFF) - 1;
 			}
-			case CAN_R_02:{//整车控制器发送状态信息二
-				index = 1;
-				break;
+			else if(tmp_u32>=CAN_R_0201 && tmp_u32<=CAN_R_0230){	//单体温度
+				index = ((tmp_u32>>16)&0xFF) - 1;
 			}
-			case CAN_R_03:{//整车控制器发送状态信息三
-				index = 2;
+		}
+		else{		
+			switch(can_msg.ExtId){
+				case CAN_R_03:{//BMS单体电压极值数据帧
+					index = ECAN_R_03;
+					break;
+				}
+				case CAN_R_04:{//BMS温度模块极值数据帧
+					index = ECAN_R_04;
+					break;
+				}
+				case CAN_R_05:{//BMS报警1
+					index = ECAN_R_05;
+					break;
+				}
+				case CAN_R_06:{//BMS报警2
+					index = ECAN_R_06;
+					break;
+				}
+				case CAN_R_07:{//BMS系统信息1
+					index = ECAN_R_07;
+					break;
+				}
+				case CAN_R_08:{//BMS系统信息2
+					index = ECAN_R_08;
+					break;
+				}
+				case CAN_R_09:{//BMS系统信息3
+					index = ECAN_R_09;
+					break;
+				}
+				case CAN_R_10:{//VCU报文1
+					index = ECAN_R_10;
+					break;
+				}
+				case CAN_R_11:{//VCU报文2
+					index = ECAN_R_11;
+					break;
+				}
+				case CAN_R_12:{//VCU报文3
+					index = ECAN_R_12;
+					break;
+				}
+				case CAN_R_13:{//VCU报文4
+					index = ECAN_R_13;
+					break;
+				}
+				case CAN_R_14:{//VCU报文5
+					index = ECAN_R_14;
+					break;
+				}
+				case CAN_R_15:{//VCU报文6
+					index = ECAN_R_15;
+					break;
+				}
+
+				case CAN_R_26:{//VIN码 3 //131415//242526;
+				if(can_msg.Data[0] == 1)
+					index = ECAN_R_2601;
+				else if(can_msg.Data[0] == 2)
+					index = ECAN_R_2602;
+				else if(can_msg.Data[0] == 3)
+					index = ECAN_R_2603;
+				
 				break;
+				}
+				
+				default:				break;
 			}
-			case CAN_R_04:{//整车控制器发送状态信息四
-				index = 3;
-				break;
-			}
-			case CAN_R_05:{//整车控制器对高压辅件
-				index = 4;
-				break;
-			}
-			case CAN_R_06:{//仪表发送整车状态信息
-				index = 5;
-				break;
-			}
-			case CAN_R_07:{//发送状态信息一
-				index = 6;
-				break;
-			}
-			case CAN_R_08:{//发送状态信息二
-				index = 7;
-				break;
-			}
-			case CAN_R_09:{//发送状态信息三
-				index = 8;
-				break;
-			}
-			case CAN_R_10:{//发送状态信息四
-				index = 9;
-				break;
-			}
-			case CAN_R_11:{//发送状态信息五
-				index = 10;
-				break;
-			}
-			case CAN_R_12:{//发送状态信息六
-				index = 11;
-				break;
-			}
-			case CAN_R_13:{//发送状态信息七
-				index = 12;
-				break;
-			}
-			case CAN_R_14:{//绝缘检测仪发送状态信息
-				index = 13;
-				break;
-			}
-			case CAN_R_15:{//DCDC 发送状态信息
-				index = 14;
-				break;
-			}
-			case CAN_R_16:{//动转控制器发送状态信息
-				index = 15;
-				break;
-			}
-			case CAN_R_17:{//打气泵发送状态信息
-				index = 16;
-				break;
-			}
-			case CAN_R_18:{//
-				index = 17;
-				break;
-			}
-			
-			default:				break;
 		}
 	}
+	can_struct.rx_can_buf_flag[index] = index; //有数据
 	
-	can_struct.rx_data_flag = 1;
+	if(can_struct.rx_data_flag==0xFF)
+		can_struct.rx_data_flag = index;
 	
 	if(index == 0xFF){
-		return;
+		goto RETURN_LAB;
 	}
-//	Uint32ToU8(p_tmp,can_msg.ExtId);
-//	p_tmp += 4;
 
-	can_struct.rx_can_buf[index].Item.id = can_msg.ExtId;
+//	can_struct.rx_can_buf[index].Item.id = can_msg.ExtId;
 	MemCpy(&can_struct.rx_can_buf[index].Item.data[0].byte,can_msg.Data,8);
+
+RETURN_LAB:
+	return;
 }
 
 
-void CanRx_Analyse(void)
+static void CANR01xx_Filter(uint8 eindex)
 {
-	uint8  index ;
+	uint8 eindexmax = ECAN_R_0160 - ECAN_R_0101 + 1;
+	union32 tmpval,tmpu32;
+	
+	tmpval.dword = CAN_R_0101;
+	tmpval.byte.HL = ((eindex+2) % eindexmax) + 1;
+	if(eindex & 0x01){//奇数(ID偶数)  更改第三变量对应CANID，保留第二变量对应CANID
+		tmpu32.dword = CAN1->sFilterRegister[12].FR1 ;
+		tmpu32.dword = (tmpu32.dword >> 3);
+		CanFilterInit(12,tmpu32.dword,tmpval.dword);
+	}
+	else{							//偶数(ID奇数)  更改第二变量对应CANID，保留第三变量对应CANID
+		tmpu32.dword = CAN1->sFilterRegister[12].FR2;
+		tmpu32.dword = (tmpu32.dword >> 3);
+		CanFilterInit(12,tmpval.dword,tmpu32.dword);
+	}
+	
+}
+static void CANR02xx_Filter(uint8 eindex)
+{
+	uint8 eindexmax = ECAN_R_0230 - ECAN_R_0201 + 1;
+	union32 tmpval,tmpu32;
+	
+	tmpval.dword = CAN_R_0201;
+	tmpval.byte.HL = ((eindex+2) % eindexmax) + 1 + ECAN_R_0201;
+	if(eindex & 0x01){//奇数(ID偶数)  更改第二变量对应CANID，保留第三变量对应CANID
+		tmpu32.dword = CAN1->sFilterRegister[13].FR2;
+		tmpu32.dword = (tmpu32.dword >> 3);
+		CanFilterInit(13,tmpval.dword,tmpu32.dword);
+	}
+	else{							//偶数(ID奇数)  更改第三变量对应CANID，保留第二变量对应CANID
+		tmpu32.dword = CAN1->sFilterRegister[13].FR1;
+		tmpu32.dword = (tmpu32.dword >> 3);
+		CanFilterInit(13,tmpu32.dword,tmpval.dword);
+	}
+	
+}
+static void CANR_PeriodChargeFilter(void)
+{
+	static uint32 CAN12filter1,CAN12filter2,CAN13filter1,CAN13filter2;
+	static uint8 CAN12count1,CAN12count2,CAN13count1,CAN13count2;
+	union32 tmpu321,tmpu322;
+	
+	if(CAN12count1 > 10){	//超时更改滤波器
+		CAN12count1 = 0;
+		tmpu321.dword = CAN1->sFilterRegister[12].FR1 ;
+		tmpu321.dword = (tmpu321.dword >> 3);		
+		tmpu321.byte.HL = (tmpu321.byte.HL + 2)%(1+ECAN_R_0160 - ECAN_R_0101);
+		tmpu322.dword = CAN1->sFilterRegister[12].FR2 ;
+		tmpu322.dword = (tmpu322.dword >> 3);
+		CanFilterInit(12,tmpu321.dword,tmpu322.dword);
+	}
+	else{									//更改滤波器计时
+		if(CAN12filter1 == CAN1->sFilterRegister[12].FR1){
+			CAN12count1++;			
+		}
+		else{
+			CAN12count1 = 0;
+			CAN12filter1 = CAN1->sFilterRegister[12].FR1 ;
+		}
+	}
+	
+	if(CAN12count2 > 10){	//超时更改滤波器
+		CAN12count2 = 0;
+		tmpu321.dword = CAN1->sFilterRegister[12].FR1 ;
+		tmpu321.dword = (tmpu321.dword >> 3);		
+		tmpu322.dword = CAN1->sFilterRegister[12].FR2 ;
+		tmpu322.dword = (tmpu322.dword >> 3);
+		tmpu322.byte.HL = (tmpu322.byte.HL + 2)%(1+ECAN_R_0160 - ECAN_R_0101);
+		CanFilterInit(12,tmpu321.dword,tmpu322.dword);
+	}
+	else{									//更改滤波器计时
+		if(CAN12filter2 == CAN1->sFilterRegister[12].FR2){
+			CAN12count2++;			
+		}
+		else{
+			CAN12count2 = 0;
+			CAN12filter2 = CAN1->sFilterRegister[12].FR2 ;
+		}
+	}
+	
+	
+	if(CAN13count1 > 10){	//超时更改滤波器
+		CAN13count1 = 0;
+		tmpu321.dword = CAN1->sFilterRegister[13].FR1 ;
+		tmpu321.dword = (tmpu321.dword >> 3);		
+		tmpu321.byte.HL = (tmpu321.byte.HL + 2)%(1+ECAN_R_0230 - ECAN_R_0201);
+		tmpu322.dword = CAN1->sFilterRegister[13].FR2 ;
+		tmpu322.dword = (tmpu322.dword >> 3);
+		CanFilterInit(13,tmpu321.dword,tmpu322.dword);
+	}
+	else{									//更改滤波器计时
+		if(CAN13filter1 == CAN1->sFilterRegister[13].FR1){
+			CAN13count1++;			
+		}
+		else{
+			CAN13count1 = 0;
+			CAN13filter1 = CAN1->sFilterRegister[13].FR1 ;
+		}
+	}
+	
+	if(CAN13count2 > 10){	//超时更改滤波器
+		CAN13count2 = 0;
+		tmpu321.dword = CAN1->sFilterRegister[13].FR1 ;
+		tmpu321.dword = (tmpu321.dword >> 3);		
+		tmpu322.dword = CAN1->sFilterRegister[13].FR2 ;
+		tmpu322.dword = (tmpu322.dword >> 3);
+		tmpu322.byte.HL = (tmpu322.byte.HL + 2)%(1+ECAN_R_0230 - ECAN_R_0201);
+		CanFilterInit(13,tmpu321.dword,tmpu322.dword);
+	}
+	else{									//更改滤波器计时
+		if(CAN13filter2 == CAN1->sFilterRegister[12].FR2){
+			CAN13count2++;			
+		}
+		else{
+			CAN13count2 = 0;
+			CAN13filter2 = CAN1->sFilterRegister[12].FR2 ;
+		}
+	}
+}
+static void CanRx_Analyse(void)
+{
+//	uint32 CAN_R_01xx[] = {};
+	uint8  data[20];
+	uint8  index;
 	union32 tmpval;
 	
-	for(index=0;index < CAN_RX_ID_NUM; index++){
-		switch(can_struct.rx_can_buf[index].Item.id){
-			case CAN_R_01:{//整车控制器发送状态信息一
+	for(index = ECAN_R_0101; index <= ECAN_R_27; index++){
+		
+		if(can_struct.rx_can_buf_flag[index] != 0xFF){
+			index = can_struct.rx_can_buf_flag[index];
+			can_struct.rx_can_buf_flag[index] = 0xFF;
+			if(index>=ECAN_R_0101 && index<=ECAN_R_0160){//单体电压
 				tmpval.byte.LL = can_struct.rx_can_buf[index].Item.data[0].byte;
 				tmpval.byte.LH = can_struct.rx_can_buf[index].Item.data[1].byte;
-				g_promotor_union[0].Item.ctr_in_vol = tmpval.word.L;						//电机控制器输入电压
+				g_sigbatt_val[0][index*4] 	= tmpval.word.L;
+				tmpval.byte.LL = can_struct.rx_can_buf[index].Item.data[2].byte;
+				tmpval.byte.LH = can_struct.rx_can_buf[index].Item.data[3].byte;
+				g_sigbatt_val[0][index*4+1] = tmpval.word.L;
 				tmpval.byte.LL = can_struct.rx_can_buf[index].Item.data[4].byte;
 				tmpval.byte.LH = can_struct.rx_can_buf[index].Item.data[5].byte;
-				g_promotor_union[0].Item.ctr_bus_cur = tmpval.word.L;						//电机控制器直流母线电流
+				g_sigbatt_val[0][index*4+2] = tmpval.word.L;
 				tmpval.byte.LL = can_struct.rx_can_buf[index].Item.data[6].byte;
-				tmpval.byte.LH = can_struct.rx_can_buf[index].Item.data[7].byte;				
-				g_promotor_union[0].Item.rpm = tmpval.word.L;										//驱动电机转速	
-				break;
+				tmpval.byte.LH = can_struct.rx_can_buf[index].Item.data[7].byte;
+				g_sigbatt_val[0][index*4+3] = tmpval.word.L;
+				
+				CANR01xx_Filter(index);//变更滤波ID index = 0~59
 			}
-			case CAN_R_02:{//整车控制器发送状态信息二
-				g_promotor_union[0].Item.motor_tem = can_struct.rx_can_buf[index].Item.data[0].byte;		//电机温度
-				g_promotor_union[0].Item.ctr_tem   = can_struct.rx_can_buf[index].Item.data[1].byte;		//控制器温度
-				//档位状态
-				if(can_struct.rx_can_buf[CAN_R_06_index].Item.data[0].bit.B1){//驻车信号 注意这是从CAN_R_06 0x1801D028读取的
-					g_provehice_union.Item.stall.half.L = 0x0F;
-					g_provehice_union.Item.stall.bit.B4 = 1;
-					g_provehice_union.Item.stall.bit.B5 = 0;
+			else if(index>=ECAN_R_0201 && index<=ECAN_R_0230){//单体温度		
+				memcpy(&g_btprobe_val[0][index*8],can_struct.rx_can_buf[index].Item.data,8);
+	//			g_btprobe_val[0][index*8] 	= can_struct.rx_can_buf[index].Item.data[0].byte;
+	//			g_btprobe_val[0][index*8+1] = can_struct.rx_can_buf[index].Item.data[1].byte;
+	//			g_btprobe_val[0][index*8+2] = can_struct.rx_can_buf[index].Item.data[2].byte;
+	//			g_btprobe_val[0][index*8+3] = can_struct.rx_can_buf[index].Item.data[3].byte;
+	//			g_btprobe_val[0][index*8+4] = can_struct.rx_can_buf[index].Item.data[4].byte;
+	//			g_btprobe_val[0][index*8+5] = can_struct.rx_can_buf[index].Item.data[5].byte;
+	//			g_btprobe_val[0][index*8+6] = can_struct.rx_can_buf[index].Item.data[6].byte;
+	//			g_btprobe_val[0][index*8+7] = can_struct.rx_can_buf[index].Item.data[7].byte;
+				CANR02xx_Filter(index-ECAN_R_0201);//变更滤波ID index-ECAN_R_0201 = 0~29
+			}
+			else if(index>=ECAN_R_2601 && index<=ECAN_R_2603){//VIN
+				if(can_struct.rx_can_buf[ECAN_R_2601].Item.data[0].byte == 0x01 && \
+					 can_struct.rx_can_buf[ECAN_R_2602].Item.data[0].byte == 0x02 && \
+					 can_struct.rx_can_buf[ECAN_R_2603].Item.data[0].byte == 0x03	){
+						 
+					can_struct.rx_can_buf[ECAN_R_2601].Item.data[0].byte = 0xF1 ;
+					can_struct.rx_can_buf[ECAN_R_2602].Item.data[0].byte = 0xF2 ;
+					can_struct.rx_can_buf[ECAN_R_2603].Item.data[0].byte = 0xF3 ;
+					memcpy(data,      &can_struct.rx_can_buf[ECAN_R_2601].Item.data[1].byte, 7);	
+					memcpy(&data[7],  &can_struct.rx_can_buf[ECAN_R_2602].Item.data[1].byte, 7);	
+					memcpy(&data[14], &can_struct.rx_can_buf[ECAN_R_2603].Item.data[1].byte, 3);	
+					ProWrite_VIN(data);
 				}
-				else{
-					tmpval.byte.LL = can_struct.rx_can_buf[index].Item.data[2].byte;
-					tmpval.byte.LH = (tmpval.byte.LL>>5) & 0x07;
-					if(tmpval.byte.LH){	//1~7档
-						g_provehice_union.Item.stall.half.L = tmpval.byte.LH;
-						g_provehice_union.Item.stall.bit.B4 = 0;
-						g_provehice_union.Item.stall.bit.B5 = 1;
+			}
+			else{		
+				switch(index){
+					case ECAN_R_03:{//BMS单体电压极值数据帧
+						g_proextreme_union.Item.maxvolsys_id = can_struct.rx_can_buf[ECAN_R_03].Item.data[0].byte;
+						g_proextreme_union.Item.maxvolbat_id = can_struct.rx_can_buf[ECAN_R_03].Item.data[1].byte;
+						tmpval.byte.LL = can_struct.rx_can_buf[ECAN_R_03].Item.data[2].byte;
+						tmpval.byte.LH = can_struct.rx_can_buf[ECAN_R_03].Item.data[3].byte;
+						g_proextreme_union.Item.maxvolbat_val = tmpval.word.L;
+						g_proextreme_union.Item.minvolsys_id 	= can_struct.rx_can_buf[ECAN_R_03].Item.data[4].byte;
+						g_proextreme_union.Item.minvolbat_id 	= can_struct.rx_can_buf[ECAN_R_03].Item.data[5].byte;
+						tmpval.byte.LL = can_struct.rx_can_buf[ECAN_R_03].Item.data[6].byte;
+						tmpval.byte.LH = can_struct.rx_can_buf[ECAN_R_03].Item.data[7].byte;
+						g_proextreme_union.Item.minvolbat_val = tmpval.word.L;
+						break;
 					}
-					else if(tmpval.bit.B02){//倒挡
-						g_provehice_union.Item.stall.half.L = 0x0D;
-						g_provehice_union.Item.stall.bit.B4 = 0;
-						g_provehice_union.Item.stall.bit.B5 = 1;
+					case ECAN_R_04:{//BMS温度模块极值数据帧				
+						g_proextreme_union.Item.maxtemsys_id 	= can_struct.rx_can_buf[ECAN_R_04].Item.data[0].byte;
+						g_proextreme_union.Item.maxtempro_id 	= can_struct.rx_can_buf[ECAN_R_04].Item.data[1].byte;
+						g_proextreme_union.Item.maxtempro_val = can_struct.rx_can_buf[ECAN_R_04].Item.data[2].byte;
+						g_proextreme_union.Item.mintemsys_id 	= can_struct.rx_can_buf[ECAN_R_04].Item.data[3].byte;
+						g_proextreme_union.Item.mintempro_id 	= can_struct.rx_can_buf[ECAN_R_04].Item.data[4].byte;
+						g_proextreme_union.Item.mintempro_val = can_struct.rx_can_buf[ECAN_R_04].Item.data[5].byte;
+						tmpval.byte.LL = can_struct.rx_can_buf[ECAN_R_04].Item.data[6].byte;	//绝缘电阻
+						tmpval.byte.LH = can_struct.rx_can_buf[ECAN_R_04].Item.data[7].byte;
+						g_provehice_union.Item.resistance = tmpval.word.L;		
+						break;
 					}
-					else if(tmpval.bit.B01){//空挡
-						g_provehice_union.Item.stall.half.L = 0x00;
-						g_provehice_union.Item.stall.bit.B4 = 0;
-						g_provehice_union.Item.stall.bit.B5 = 0;
+					case ECAN_R_05:{//BMS报警1
+						g_proalarm_union.Item.rank 				= can_struct.rx_can_buf[ECAN_R_05].Item.data[0].byte;
+						g_proalarm_union.Item.storagenum 	= can_struct.rx_can_buf[ECAN_R_05].Item.data[1].byte;
+						if(g_proalarm_union.Item.rank == 0){
+							g_proalarm_union.Item.flag.dword 	= 0;
+							g_proalarm_union.Item.motornum 		= 0;
+							g_proalarm_union.Item.enginenum 	= 0;
+							g_proalarm_union.Item.othersnum 	= 0;
+						}
+						else if(g_proalarm_union.Item.rank == 1){
+							g_storage_alr[0] = can_struct.rx_can_buf[ECAN_R_05].Item.data[6].byte;	//
+							g_storage_alr[1] = can_struct.rx_can_buf[ECAN_R_05].Item.data[7].byte;
+							g_storage_alr[2] = 0;
+							g_storage_alr[3] = 0;
+						}
+						else if(g_proalarm_union.Item.rank == 2){
+							g_storage_alr[0] = can_struct.rx_can_buf[ECAN_R_05].Item.data[4].byte;	//
+							g_storage_alr[1] = can_struct.rx_can_buf[ECAN_R_05].Item.data[5].byte;
+							g_storage_alr[2] = 0;
+							g_storage_alr[3] = 0;
+						}
+						else if(g_proalarm_union.Item.rank == 3){
+							g_storage_alr[0] = can_struct.rx_can_buf[ECAN_R_05].Item.data[2].byte;	//
+							g_storage_alr[1] = can_struct.rx_can_buf[ECAN_R_05].Item.data[3].byte;
+							g_storage_alr[2] = 0;
+							g_storage_alr[3] = 0;		
+						}	
+						break;
 					}
-					else if(tmpval.bit.B00){//自动D档
-						g_provehice_union.Item.stall.half.L = 0x0E;
-						g_provehice_union.Item.stall.bit.B4 = 0;
-						g_provehice_union.Item.stall.bit.B5 = 1;
+					case ECAN_R_06:{//BMS报警2
+						/* tmpval.dword = 0;
+						tmpval.byte.LL = can_struct.rx_can_buf[ECAN_R_06].Item.data[0].byte;	//通用报警标志
+						tmpval.byte.LH = can_struct.rx_can_buf[ECAN_R_06].Item.data[1].byte;
+						g_proalarm_union.Item.flag.dword 	= tmpval.dword;			
+						
+						g_provehice_union.Item.charge = can_struct.rx_can_buf[ECAN_R_06].Item.data[2].byte;
+						tmpval.byte.LL = can_struct.rx_can_buf[ECAN_R_06].Item.data[3].byte;	//单次充电量
+						tmpval.byte.LH = can_struct.rx_can_buf[ECAN_R_06].Item.data[4].byte;
+						
+						tmpval.dword = 0;
+						tmpval.byte.LL = can_struct.rx_can_buf[ECAN_R_06].Item.data[5].byte;	//累计充电量
+						tmpval.byte.LH = can_struct.rx_can_buf[ECAN_R_06].Item.data[6].byte;					
+						tmpval.byte.HL = can_struct.rx_can_buf[ECAN_R_06].Item.data[7].byte;	
+				 */
+						break;
 					}
+					case ECAN_R_07:{//BMS系统信息1										
+						g_prologin_union.Item.storage_num = can_struct.rx_can_buf[ECAN_R_07].Item.data[0].byte;//可充电储能子系统个数
+						g_provbattsys_union.Item.serial = can_struct.rx_can_buf[ECAN_R_07].Item.data[1].byte;//可充电储能子系统号 
+						tmpval.byte.LL = can_struct.rx_can_buf[ECAN_R_07].Item.data[2].byte;	//
+						tmpval.byte.LH = can_struct.rx_can_buf[ECAN_R_07].Item.data[3].byte;
+						g_provbattsys_union.Item.voltage  = tmpval.word.L;		
+						tmpval.byte.LL = can_struct.rx_can_buf[ECAN_R_07].Item.data[4].byte;	//
+						tmpval.byte.LH = can_struct.rx_can_buf[ECAN_R_07].Item.data[5].byte;
+						g_provbattsys_union.Item.current  = tmpval.word.L;		
+						
+						g_prologin_union.Item.storage_len = can_struct.rx_can_buf[ECAN_R_07].Item.data[6].byte;
+						break;
+					}
+					case ECAN_R_08:{//BMS系统信息2
+						g_protbattsys_union.Item.serial = can_struct.rx_can_buf[ECAN_R_08].Item.data[0].byte;//可充电储能子系统号 
+						tmpval.byte.LL = can_struct.rx_can_buf[ECAN_R_08].Item.data[1].byte;	//
+						tmpval.byte.LH = can_struct.rx_can_buf[ECAN_R_08].Item.data[2].byte;
+						g_protbattsys_union.Item.btprobe_num = tmpval.word.L;		 
+						tmpval.byte.LL = can_struct.rx_can_buf[ECAN_R_08].Item.data[3].byte;	//
+						tmpval.byte.LH = can_struct.rx_can_buf[ECAN_R_08].Item.data[4].byte;
+						g_provbattsys_union.Item.sigbatt_num = tmpval.word.L;		
+						break;
+					}
+					case ECAN_R_09:{//BMS系统信息3
+						g_provehice_union.Item.SOC = can_struct.rx_can_buf[ECAN_R_09].Item.data[2].byte;//
+						tmpval.byte.LL = can_struct.rx_can_buf[ECAN_R_09].Item.data[3].byte;	//
+						tmpval.byte.LH = can_struct.rx_can_buf[ECAN_R_09].Item.data[4].byte;
+						g_provehice_union.Item.voltage = tmpval.word.L;		 
+						tmpval.byte.LL = can_struct.rx_can_buf[ECAN_R_09].Item.data[5].byte;	//
+						tmpval.byte.LH = can_struct.rx_can_buf[ECAN_R_09].Item.data[6].byte;
+						g_provehice_union.Item.current = tmpval.word.L;		
+					
+						break;
+					}
+					case ECAN_R_10:{//VCU报文1
+						tmpval.byte.LL = can_struct.rx_can_buf[ECAN_R_10].Item.data[0].byte & 0x0F;//  车辆状态
+						if(tmpval.byte.LL>=0x01 && tmpval.byte.LL<=0x03){
+							g_provehice_union.Item.vehicle = tmpval.byte.LL;
+						}
+						else if(tmpval.byte.LL==0x0E || tmpval.byte.LL==0x0F){
+							g_provehice_union.Item.vehicle = tmpval.byte.LL | 0XF0;
+						}
+						tmpval.byte.LL = (can_struct.rx_can_buf[ECAN_R_10].Item.data[0].byte>>4) & 0x0F;//  运行状态
+						if(tmpval.byte.LL>=0x01 && tmpval.byte.LL<=0x03){
+							g_provehice_union.Item.mode = tmpval.byte.LL;
+						}
+						else if(tmpval.byte.LL==0x0E || tmpval.byte.LL==0x0F){
+							g_provehice_union.Item.mode = tmpval.byte.LL | 0XF0;
+						}
+						tmpval.byte.LL = can_struct.rx_can_buf[ECAN_R_10].Item.data[1].byte;	//
+						tmpval.byte.LH = can_struct.rx_can_buf[ECAN_R_10].Item.data[2].byte;
+						g_provehice_union.Item.speed = tmpval.word.L;		 
+						tmpval.byte.LL = can_struct.rx_can_buf[ECAN_R_10].Item.data[3].byte;	//
+						tmpval.byte.LH = can_struct.rx_can_buf[ECAN_R_10].Item.data[4].byte;
+						tmpval.byte.HL = can_struct.rx_can_buf[ECAN_R_10].Item.data[5].byte;	//
+						tmpval.byte.HH = can_struct.rx_can_buf[ECAN_R_10].Item.data[6].byte;
+						g_provehice_union.Item.mileage = tmpval.dword;		
+						
+					printf(" g_provehice_union.Item.mode = %d \r\n",g_provehice_union.Item.mode);
+					printf(" g_provehice_union.Item.mileage = %d \r\n",g_provehice_union.Item.mileage);
+						break;
+					}
+					case ECAN_R_11:{//VCU报文2				
+						g_provehice_union.Item.DC_statu 	= can_struct.rx_can_buf[ECAN_R_11].Item.data[4].byte;//
+						g_provehice_union.Item.stall.byte = can_struct.rx_can_buf[ECAN_R_11].Item.data[5].byte;//
+						break;
+					}
+					case ECAN_R_12:{//VCU报文3
+						g_promotor_union[0].Item.serial 	= can_struct.rx_can_buf[ECAN_R_12].Item.data[0].byte;//
+						g_promotor_union[0].Item.status 	= can_struct.rx_can_buf[ECAN_R_12].Item.data[1].byte;//
+						g_promotor_union[0].Item.ctr_tem 	= can_struct.rx_can_buf[ECAN_R_12].Item.data[2].byte;//
+						tmpval.byte.LL = can_struct.rx_can_buf[ECAN_R_12].Item.data[3].byte;	//
+						tmpval.byte.LH = can_struct.rx_can_buf[ECAN_R_12].Item.data[4].byte;
+						g_promotor_union[0].Item.rpm = tmpval.word.L;		 
+						tmpval.byte.LL = can_struct.rx_can_buf[ECAN_R_12].Item.data[5].byte;	//
+						tmpval.byte.LH = can_struct.rx_can_buf[ECAN_R_12].Item.data[6].byte;
+						g_promotor_union[0].Item.torque = tmpval.word.L;		 
+						g_promotor_union[0].Item.motor_tem 	= can_struct.rx_can_buf[ECAN_R_12].Item.data[7].byte;//
+					
+						break;
+					}
+					case ECAN_R_13:{//VCU报文4
+						g_promotor_union[0].Item.serial 	= can_struct.rx_can_buf[ECAN_R_13].Item.data[0].byte;//
+						tmpval.byte.LL = can_struct.rx_can_buf[ECAN_R_13].Item.data[1].byte;	//
+						tmpval.byte.LH = can_struct.rx_can_buf[ECAN_R_13].Item.data[2].byte;
+						g_promotor_union[0].Item.ctr_in_vol = tmpval.word.L;		 
+						tmpval.byte.LL = can_struct.rx_can_buf[ECAN_R_13].Item.data[3].byte;	//
+						tmpval.byte.LH = can_struct.rx_can_buf[ECAN_R_13].Item.data[4].byte;
+						g_promotor_union[0].Item.ctr_bus_cur = tmpval.word.L;		 
+						g_provehice_union.Item.Accelerate 	= can_struct.rx_can_buf[ECAN_R_13].Item.data[5].byte;//
+						g_provehice_union.Item.braking 	= can_struct.rx_can_buf[ECAN_R_13].Item.data[6].byte;//
+						break;
+					}
+					case ECAN_R_14:{//VCU报文5
+						g_proalarm_union.Item.rank 	= can_struct.rx_can_buf[ECAN_R_14].Item.data[0].byte;//
+						tmpval.byte.LL = can_struct.rx_can_buf[ECAN_R_14].Item.data[1].byte;	//通用报警标志
+						tmpval.byte.LH = can_struct.rx_can_buf[ECAN_R_14].Item.data[2].byte;
+						tmpval.byte.HL = can_struct.rx_can_buf[ECAN_R_14].Item.data[3].byte;	
+						tmpval.byte.HH = can_struct.rx_can_buf[ECAN_R_14].Item.data[4].byte;
+						g_proalarm_union.Item.flag.dword 	= tmpval.dword;		
+						g_proalarm_union.Item.storagenum 	= can_struct.rx_can_buf[ECAN_R_14].Item.data[5].byte;
+						g_proalarm_union.Item.enginenum 	= can_struct.rx_can_buf[ECAN_R_14].Item.data[6].byte;
+						g_proalarm_union.Item.othersnum 	= can_struct.rx_can_buf[ECAN_R_14].Item.data[7].byte;					
+						
+						break;
+					}
+					case ECAN_R_15:{//VCU报文6
+						g_motro_alr[0] = can_struct.rx_can_buf[ECAN_R_15].Item.data[0].byte;//
+						g_motro_alr[1] = can_struct.rx_can_buf[ECAN_R_15].Item.data[1].byte;//
+						g_motro_alr[2] = can_struct.rx_can_buf[ECAN_R_15].Item.data[2].byte;//
+						g_motro_alr[3] = can_struct.rx_can_buf[ECAN_R_15].Item.data[3].byte;//
+						
+						g_others_alr[0] = can_struct.rx_can_buf[ECAN_R_15].Item.data[4].byte;//
+						g_others_alr[1] = can_struct.rx_can_buf[ECAN_R_15].Item.data[5].byte;//
+						g_others_alr[2] = can_struct.rx_can_buf[ECAN_R_15].Item.data[6].byte;//
+						g_others_alr[3] = can_struct.rx_can_buf[ECAN_R_15].Item.data[7].byte;//
+						break;
+					}
+					
+					default:				break;
 				}
-				break;
 			}
-			case CAN_R_03:{//整车控制器发送状态信息三
-				g_provehice_union.Item.vehicle  = can_struct.rx_can_buf[index].Item.data[5].bit.B1;			//车辆状态
-				g_provehice_union.Item.DC_statu = can_struct.rx_can_buf[index].Item.data[7].bit.B2;			//DCDC控制状态
-				g_provehice_union.Item.Accelerate = can_struct.rx_can_buf[index].Item.data[0].byte;			//加速踏板
-				g_provehice_union.Item.braking 		= can_struct.rx_can_buf[index].Item.data[1].byte;			//制动踏板
-				
-				break;
-			}
-			case CAN_R_04:{//整车控制器发送状态信息四
-				break;
-			}
-			case CAN_R_05:{//整车控制器对高压辅件
-				break;
-			}
-			case CAN_R_06:{//仪表发送整车状态信息
-				g_provehice_union.Item.speed   = can_struct.rx_can_buf[index].Item.data[2].byte * 10;		//车速 精度1不是0.1
-				tmpval.byte.LL = can_struct.rx_can_buf[index].Item.data[3].byte;
-				tmpval.byte.LH = can_struct.rx_can_buf[index].Item.data[4].byte;
-				tmpval.word.H  = can_struct.rx_can_buf[index].Item.data[5].byte;				
-				g_provehice_union.Item.mileage = tmpval.dword;																						//累计里程数
-				
-/* 				if(can_struct.rx_can_buf[index].Item.data[0].bit.B1){//驻车信号
-					g_provehice_union.Item.stall.half.L = 0x0F;
-					g_provehice_union.Item.stall.bit.B4 = 1;
-					g_provehice_union.Item.stall.bit.B5 = 0;
-				} */
-				break;
-			}
-			case CAN_R_07:{//发送状态信息一
-				tmpval.byte.LL = can_struct.rx_can_buf[index].Item.data[0].byte;
-				tmpval.byte.LH = can_struct.rx_can_buf[index].Item.data[1].byte;		
-				g_provehice_union.Item.voltage = tmpval.word.L;																						//总电压	
-				tmpval.byte.LL = can_struct.rx_can_buf[index].Item.data[2].byte;
-				tmpval.byte.LH = can_struct.rx_can_buf[index].Item.data[3].byte;		
-				g_provehice_union.Item.current = tmpval.word.L;																						//总电流
-				g_provehice_union.Item.SOC = can_struct.rx_can_buf[index].Item.data[7].byte;							//电池剩余电量SOC
-				
-				break;
-			}
-			case CAN_R_08:{//发送状态信息二
-				tmpval.byte.LL = can_struct.rx_can_buf[index].Item.data[0].byte;
-				tmpval.byte.LH = can_struct.rx_can_buf[index].Item.data[1].byte;		
-				g_proextreme_union.Item.maxvolbat_val = tmpval.word.L;																	//电池模块最高电压
-				tmpval.byte.LL = can_struct.rx_can_buf[index].Item.data[2].byte;
-				tmpval.byte.LH = can_struct.rx_can_buf[index].Item.data[3].byte;		
-				g_proextreme_union.Item.minvolbat_val = tmpval.word.L;																	//电池模块最低电压
-				g_proextreme_union.Item.maxtempro_val = can_struct.rx_can_buf[index].Item.data[4].byte;	//电池模块最高温度
-				g_proextreme_union.Item.mintempro_val = can_struct.rx_can_buf[index].Item.data[5].byte;	//电池模块最低温度
-				
-				break;
-			}
-			case CAN_R_09:{//发送状态信息三
-			
-				break;
-			}
-			case CAN_R_10:{//发送状态信息四
-				g_proextreme_union.Item.maxtempro_val = can_struct.rx_can_buf[index].Item.data[0].byte;	//电池最高电压编号
-				g_proextreme_union.Item.mintempro_val = can_struct.rx_can_buf[index].Item.data[1].byte;	//电池最低电压编号
-				g_proextreme_union.Item.maxtempro_val = can_struct.rx_can_buf[index].Item.data[2].byte;	//电池最高温度编号
-				g_proextreme_union.Item.mintempro_val = can_struct.rx_can_buf[index].Item.data[3].byte;	//电池最低温度编号
-				
-				break;
-			}
-			case CAN_R_11:{//发送状态信息五
-			
-				break;
-			}
-			case CAN_R_12:{//发送状态信息六
-			
-				break;
-			}
-			case CAN_R_13:{//发送状态信息七
-			
-				break;
-			}
-			case CAN_R_14:{//绝缘检测仪发送状态信息
-				tmpval.byte.LL = can_struct.rx_can_buf[index].Item.data[0].byte;
-				tmpval.byte.LH = can_struct.rx_can_buf[index].Item.data[1].byte;		
-				g_provehice_union.Item.resistance = tmpval.word.L;																						//绝缘电阻	
-				
-				break;
-			}
-			case CAN_R_15:{//DCDC 发送状态信息
-			
-				break;
-			}
-			case CAN_R_16:{//动转控制器发送状态信息
-			
-				break;
-			}
-			case CAN_R_17:{//打气泵发送状态信息
-			
-				break;
-			}
-			case CAN_R_18:{//
-			
-				break;
-			}
-			
-			default:break;
 		}
-		
-		can_struct.rx_can_buf[index].Item.id = 0;
+			
 	}
-		
 }
+
 
 void CanMonitor(uint16 past_sec)
 {
@@ -388,9 +615,10 @@ void CanMonitor(uint16 past_sec)
 			CanInit();
 			return;
 		}		
-//		CanTx();		
-		if(can_struct.rx_data_flag == 1){//解析CAN
+		CanTx();			
+		if(can_struct.rx_data_flag != 0xFF){//解析CAN
 			CanRx_Analyse();
+			can_struct.rx_data_flag = 0xFF;
 		}
 		else{
 			if(0){///仪表长时间无数据,重启
@@ -404,6 +632,7 @@ void CanMonitor(uint16 past_sec)
 				ON_CAN_PWR();
 			}
 		}
+		CANR_PeriodChargeFilter();
 	}
 	else{
 		if(0){//如果ACC关

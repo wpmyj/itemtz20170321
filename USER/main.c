@@ -3,7 +3,7 @@
 
 主频 72MHz
 
-
+注意protocol中因内存对齐而改变成员顺序的问题（上传时可能对顺序有要求）
 
 
 */
@@ -18,15 +18,15 @@
 //设置任务优先级
 #define START_TASK_PRIO      			11 //开始任务的优先级设置为最低
 #define LED0_TASK_PRIO       			7 
-#define LOCAL_UART_TASK_PRIO      6 
-#define L218_TASK_PRIO      			8 
-#define PERIOD_TASK_PRIO      		9 
+#define LOCAL_UART_TASK_PRIO      9 
+#define L218_TASK_PRIO      			5 
+#define PERIOD_TASK_PRIO      		6 
 #define TEST_TASK_PRIO      			10 
 //设置任务堆栈大小
 #define START_STK_SIZE  					64
 #define LED0_STK_SIZE  		    		128
 #define LOCAL_UART_STK_SIZE  			512
-#define L218_STK_SIZE  						512
+#define L218_STK_SIZE  						1024
 #define PERIOD_STK_SIZE  					512
 #define TEST_STK_SIZE  						256
 //任务堆栈	
@@ -51,6 +51,21 @@ void Test_task(void *pdata);
 ******************************************************/
 void System_Mode_Init(void)
 {
+	//时间初始化
+	g_protime_union.Item.year 		= 17;
+	g_protime_union.Item.month 		= 1;
+	g_protime_union.Item.day 			= 1;
+	g_protime_union.Item.hour 		= 1;
+	g_protime_union.Item.minute 	= 1;
+	g_protime_union.Item.second 	= 1;
+	
+	g_sysmiscrun_struct.have_sysAlarm_count  = 0;											///系统出现报警倒计时
+	g_sysmiscrun_struct.save_sysAlarm_numb   = SYS_SAVEALARM_NUMB;		///未出现报警时 保留INTFLAH的记录条数  
+	g_sysmiscrun_struct.assist_gps_flag      = 2;
+	g_provbattsys_union.Item.framebatt_num   = 96;
+	g_protbattsys_union.Item.btprobe_num		 = 24;
+	memset(can_struct.rx_can_buf_flag, 0xFF, CAN_RX_ID_NUM);
+	
 	GpioInit();
 //	IwdgInit();	
 	PvdInit();
@@ -126,18 +141,39 @@ void led0_task(void *pdata)
 	
 	while(1)
 	{
-		ON_WORK_LED();
-		OFF_GPS_LED();
+//		ON_WORK_LED();
+//		OFF_GPS_LED();
+//		CPL_ERR_LED();
 		OSTimeDlyHMSM(0, 0, 1, 0);		
 		FeedWtd();
 		
-		OFF_WORK_LED();
-		ON_GPS_LED();
+	
+		if(g_propostion_union.Item.status.bit.B0 ==1){
+			OFF_GPS_LED();	//未定位
+		}
+		else{
+			ON_GPS_LED();
+		}
+		if(g_pro_struct.login_center_flag == TRUE){	//已经连接
+			ON_WORK_LED();
+		}
+		else{
+			OFF_WORK_LED();	//网络连接标志
+		}
+		if(g_pro_struct.try_login_statu == 3){	//已经登录	
+			ON_ERR_LED();
+		}
+		else{
+			OFF_ERR_LED();	//网络连接标志
+		}
+		
+		
+		
+//		OFF_WORK_LED();
+//		ON_GPS_LED();
 		OSTimeDlyHMSM(0, 0, 1, 0);
 		FeedWtd();
 		
-		printf("\r\n g_pro_struct.over3_relogin_time = %d \r\n",g_pro_struct.over3_relogin_time);
-		printf("\r\n g_pro_struct.try_login_statu = %d \r\n",g_pro_struct.try_login_statu);
 	};
 }
 

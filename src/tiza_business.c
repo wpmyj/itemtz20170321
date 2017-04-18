@@ -12,6 +12,15 @@ uint32 GPRStestcount = 1;
 ******************************************************/
 void BGprsResetPara(void)
 {
+	g_gprs_data_struct.setnetparaok_flag 		= 0;
+	SetGPRSNetPara();
+//	g_propostion_union.Item.status.byte  		= 0x01;
+	g_gps_struct.gpsinform.subitem.statu.byte = 0x01;									///初始化定位无效标志
+	g_sysprivatepara_struct.updata_sengding = 0;
+	g_pro_struct.try_login_statu  		= 0;
+	g_pro_struct.login_center_flag  	= FALSE;
+	g_sysmiscrun_struct.NLogTim_count = 0xFFFF;		///三次登录失败后重新登录时间间隔	
+	
 //初始化模块状态
 	g_gprs_data_struct.initStatus 		= GPRS_INIT_NO;
 	g_gprs_data_struct.netLinkStatus 	= GPRS_NETLINK_NO;
@@ -160,51 +169,68 @@ void ExecuteModuleTask(void)
 		///模块调度函数
 		ModlueCalledProcess();
 			
+		if(g_sysmiscrun_struct.ProgramUpgrade_flag != 0){	
+//		printf("正在升级,不执行上传数据\n");
+			return ;
+		}
 		if(g_gprs_data_struct.initStatus != GPRS_INIT_OK){	
 			g_sysprivatepara_struct.link_center_flag = 0;			
 			return;
 		}
 		g_sysprivatepara_struct.link_center_flag = 1;		
 
-		///           不启用GPS               或               GPS正确打开 
+		///           不启用GPS               或               GPS正确打开(判断考虑有效定位标志) 
 		if(g_business_struct.needopengps==_NO || g_gprs_data_struct.GpsOpenStatus==GPS_OPEN_OK)
-		{	//准备使用GPRS发送数据									
-				switch(g_gprs_data_struct.sendDataStatus)
-				{
-					case GPRS_SENDDATA_ZERO:{
-						if(BusiSendReady() == 3){
-							g_gprs_data_struct.sendDataStatus = GPRS_SENDDATA_IDLE;
-						}
-						break;
+		{	
+//			if(g_propostion_union.Item.status.bit.B0 ==1){
+//				return;		//未定位，退出
+//			}
+			if(g_gprs_data_struct.setnetparaok_flag != 1){
+				return;		//参数未设置好，退出
+			}
+			if(GpsAssistProcess() != 0){
+				printf("辅助定位打开失败 \r\n");	
+				return;
+			}
+			//准备使用GPRS发送数据		
+			switch(g_gprs_data_struct.sendDataStatus)
+			{
+				case GPRS_SENDDATA_ZERO:{
+					if(BusiSendReady() == 3){
+						g_gprs_data_struct.sendDataStatus = GPRS_SENDDATA_IDLE;
 					}
-					case GPRS_SENDDATA_IDLE:{//空闲或发送成功
-						if(g_pro_struct.try_login_statu == 0){		//置登录标志，只一次
-							g_pro_struct.try_login_statu = 1;
-						}
-						g_gprs_ctr_struct.business = GPRS_NULL;
-						g_sysprivatepara_struct.updata_sengding = 0;
-						break;
-					}
-					case GPRS_SENDDATA_OUT:{//有数据要发送
-						g_gprs_ctr_struct.business = GPRS_SEND_DATA;
-						break;
-					}
-					case GPRS_SENDDATA_BUSY:{//阻塞或发送失败
-						#ifdef BUSINESS_DEBUG
-							printf("\r\n L218 send data fail,we will reset l218 module\r\n");	
-						#endif
-						BusiResetModule();
-						g_sysprivatepara_struct.updata_sengding = 0;
-						break;
-					}
-					default:					break;
+					break;
 				}
+				case GPRS_SENDDATA_IDLE:{//空闲或发送成功
+					if(g_pro_struct.try_login_statu == 0){		//置登录标志，只一次
+						g_pro_struct.try_login_statu = 1;
+					}
+					g_gprs_ctr_struct.business = GPRS_NULL;
+					g_sysprivatepara_struct.updata_sengding = 0;
+					break;
+				}
+				case GPRS_SENDDATA_OUT:{//有数据要发送
+					g_gprs_ctr_struct.business = GPRS_SEND_DATA;
+					break;
+				}
+				case GPRS_SENDDATA_BUSY:{//阻塞或发送失败
+					#ifdef BUSINESS_DEBUG
+						printf("\r\n L218 send data fail,we will reset l218 module\r\n");	
+					#endif
+					BusiResetModule();
+//					g_gprs_ctr_struct.business = GPRS_SENDDATA_IDLE;
+					break;
+				}
+				default:					break;
+			}
  		}
 		///                   启用GPS               且               GPS尚未成功打开 
 		else if(g_business_struct.needopengps==_YES && g_gprs_data_struct.GpsOpenStatus!=GPS_OPEN_OK)
 		{
+			if(g_gprs_data_struct.GpsOpenStatus != GPS_OPEN_ING){
 				g_gprs_ctr_struct.business = GPS_OPEN_NET;
 				g_gprs_ctr_struct.ope = AT_GETGPS_INDEX;
+			}
 		}
 }
 
@@ -222,7 +248,7 @@ void L218_task(void *pdata)
 	printf("\r\n##### L218 POWER OK #####\r\n");	
 	#endif	
 	
-	GPRStestdata[i++] = 0x26;
+/* 	GPRStestdata[i++] = 0x26;
 	GPRStestdata[i++] = 0x50;
 	GPRStestdata[i++] = 0x05;
 	GPRStestdata[i++] = 0x18;
@@ -231,21 +257,44 @@ void L218_task(void *pdata)
 	GPRStestdata[i++] = 0xaa;
 	GPRStestdata[i++] = 0x00;
 	GPRStestdata[i++] = 0x16;
-	GPRStestdata[31]  = 0x62;
+	GPRStestdata[31]  = 0x62;*/
 	
-	g_gprs_data_struct.SendDataLen=32;//8;
-  g_gprs_data_struct.SendData=(uint8 *)GPRStestdata;
-	g_gprs_data_struct.IP[0] = 218;
-	g_gprs_data_struct.IP[1] = 94;
-	g_gprs_data_struct.IP[2] = 153;
-	g_gprs_data_struct.IP[3] = 146;
-	g_gprs_data_struct.Port = 9903;//27055;//
+//	g_gprs_data_struct.SendDataLen=32;//8;
+//  g_gprs_data_struct.SendData=(uint8 *)GPRStestdata;
+//	g_gprs_data_struct.IP[0] = 218;
+//	g_gprs_data_struct.IP[1] = 94;
+//	g_gprs_data_struct.IP[2] = 153;
+//	g_gprs_data_struct.IP[3] = 146;
+//	g_gprs_data_struct.Port = 20002;//9903;//27055;//
+
+/////IP：220.169.30.122 端口：9876
+//	g_gprs_data_struct.IP[0] = 220;
+//	g_gprs_data_struct.IP[1] = 169;
+//	g_gprs_data_struct.IP[2] = 30;
+//	g_gprs_data_struct.IP[3] = 122;
+//	g_gprs_data_struct.Port = 9876;//9903;//27055;//
+
+	g_provehice_union.Item.mileage = 0;					// qlj 暂作报文序号用  后面删除
+	g_propara_union.Item.SavePeri	 = 10000;	//10000ms
+	g_propara_union.Item.PDomain[0] = 218;								//公共平台域名	
+	g_propara_union.Item.PDomain[1] = 94;
+	g_propara_union.Item.PDomain[2] = 153;
+	g_propara_union.Item.PDomain[3] = 146;	
+	g_propara_union.Item.PPort			= 20002;//27055;//20000;//	9903;//	//公共平台端口		
+	SetGPRSNetPara();
 	ProParaInit();
+	
 	while(1)
 	{
-		OSTimeDlyHMSM(0, 0, 2, 0);
+		if(g_sysmiscrun_struct.have_sysAlarm_flag==1 || g_sysmiscrun_struct.have_sysAlarm_flag==2){
+			OSTimeDlyHMSM(0, 0, 0, 500);
+		}
+		else{
+			OSTimeDlyHMSM(0, 0, 2, 0);
+		}
+			
 		
-		ExecuteModuleTask();		
+		ExecuteModuleTask();
 	}
 }
 

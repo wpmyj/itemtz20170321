@@ -32,7 +32,7 @@ void TIM3_IRQHandler(void)   //TIM3中断
 	OSIntEnter();
 	if(TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET){  //检查TIM3更新中断发生与否
 		
-		g_sysmiscrun_struct.sys_time3_200ms_count = (g_sysmiscrun_struct.sys_time3_200ms_count+1)%60000;
+		g_sysmiscrun_struct.time3_200ms_count = (g_sysmiscrun_struct.time3_200ms_count+1)%60000;
 		
 		
 		TIM_ClearITPendingBit(TIM3, TIM_IT_Update);  		//清除TIMx更新中断标志 
@@ -58,6 +58,10 @@ void PVD_IRQHandler(void)
 	{
 		while(1);
 	}
+}
+void USB_LP_CAN1_RX0_IRQHandler(void)
+{
+	CanRx();
 }
 void USART1_IRQHandler(void)///本地串口
 {
@@ -182,7 +186,7 @@ void DMA1_Channel1_IRQHandler(void)
 		DMA_ClearITPendingBit(DMA1_IT_TC1);
 		
 		adc_val[0] += adc_conv_buf[0];///PWR_C
-		adc_val[1] += adc_conv_buf[1];///ADC01
+		adc_val[1] += adc_conv_buf[1];///BAT_ADC
 	  s_conv_counter++;
 		if(s_conv_counter >= 5)
 		{
@@ -192,7 +196,7 @@ void DMA1_Channel1_IRQHandler(void)
 			adc_result[0] = adc_val[0];
 	
 			adc_val[1] = adc_val[1] / 5;
-			adc_val[1] = adc_val[1]*66/4096;						///电压值，单位0.1V
+			adc_val[1] = adc_val[1]*48/4096;						///电压值，单位0.1V    3.3/(220/320)
 			adc_result[1] = adc_val[1];									///
 		}
 	}

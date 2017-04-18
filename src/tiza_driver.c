@@ -2,6 +2,7 @@
 
 #include "tiza_include.h"
 
+//#define RTC_DEBUG
 
 /******************************************************
 GPIO初始化函数
@@ -38,18 +39,17 @@ void GpioInit(void)
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
 	GPIO_Init(GPIOB, &GPIO_InitStructure);
+	
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;///LED1灯,低，亮
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+	GPIO_Init(GPIOE, &GPIO_InitStructure);
 
-//注意IwdgInit函数中对IO重新初始化
-//	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;	///WDI喂狗
-//	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-//	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-//	//GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-//	GPIO_Init(GPIOD, &GPIO_InitStructure);
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;	///WDI喂狗
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;	///WDI喂狗
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
 	//GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-	GPIO_Init(GPIOE, &GPIO_InitStructure);
+	GPIO_Init(GPIOD, &GPIO_InitStructure);
 	
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7;///485232_EN，485/232电源，控制引脚
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
@@ -84,8 +84,11 @@ void GpioInit(void)
 	
 
 	OFF_GPS_LED();
+	OFF_WORK_LED();
+	OFF_ERR_LED();
 	ON_485232_PWR();
 	ON_CAN_PWR();
+	
 	
 //	OFF_GPRS_PWR();///关机
 //	OSTimeDlyHMSM(0, 0, 1, 0);
@@ -105,14 +108,10 @@ void IwdgInit(void)
 {
 	GPIO_InitTypeDef GPIO_InitStructure;
 	
-//	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;	///WDI喂狗
-//	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-//	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-//	GPIO_Init(GPIOD, &GPIO_InitStructure);
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;	///WDI喂狗
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;	///WDI喂狗
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-	GPIO_Init(GPIOE, &GPIO_InitStructure);
+	GPIO_Init(GPIOD, &GPIO_InitStructure);
 	
   IWDG_WriteAccessCmd(IWDG_WriteAccess_Enable);
   IWDG_SetPrescaler(IWDG_Prescaler_32);
@@ -125,7 +124,17 @@ void FeedWtd(void)
 	IWDG_ReloadCounter();
 	FEED_WDT();	
 }
+/******************************************************
+系统复位初始化函数
 
+******************************************************/
+void SysReset(void)
+{
+	while(1)
+	{
+		NVIC_DISABLE();
+	}
+}
 /******************************************************
 ADC初始化函数
 
@@ -166,7 +175,7 @@ void AdcInit(void)
 	ADC_StartCalibration(ADC1);										///开始自校准
 	while(ADC_GetCalibrationStatus(ADC1));				///等待校准完成
 	
-//	ADC_SoftwareStartConvCmd(ADC1, ENABLE); //使能ADC1开始转换
+	ADC_SoftwareStartConvCmd(ADC1, ENABLE); //使能ADC1开始转换
 }
 
 /******************************************************
@@ -218,6 +227,102 @@ void SysClkConfigStop(void)
 		while(RCC_GetSYSCLKSource() != 0x08);								/*等待*/
 	} 
 }
+
+/******************************************************
+RTC时间获取函数
+年 月 日 时 分 秒
+******************************************************/
+void RtcGetCalendarTime(uint8 date_time[])
+{
+	uint8  mon_table[12]={31,28,31,30,31,30,31,31,30,31,30,31};
+	uint32 timecount=0,temp=0;
+	uint16 year,temp1=0;	
+//	static uint16 daycnt=0,temp1=0;
+  
+  timecount = RTC_GetCounter();	 
+ 	temp = timecount/86400;  				 	//得到天数(秒钟数对应的)
+//	if(daycnt != temp){								//超过一天了 
+//		daycnt = temp;
+		temp1 = 1970;									//从1970年开始
+		while(temp >= 365){				 
+			if((temp1&0X03) == 0){				//是闰年
+				if(temp>=366) temp -= 366;	//闰年的秒钟数
+				else {
+					temp1++;
+					break;
+				}  
+			}
+			else temp -= 365;	  					//平年 
+			temp1++;  
+		}   
+		year = temp1;										//得到年份
+		
+		temp1 = 0;
+		while(temp>=28){								//超过了一个月
+			if(((year&0X03) == 0) && temp1==1){	//当年是不是闰年/2月份
+				if(temp >= 29)temp -= 29;									//闰年的秒钟数
+				else 					break; 
+			}
+			else {
+				if(temp >= mon_table[temp1]){							//平年
+					temp -= mon_table[temp1];
+				}
+				else break;
+			}
+			temp1++;  
+		}
+		date_time[1] = temp1+1;				///得到月份
+		date_time[2] = temp +1;  			///得到日期 
+//	}
+	temp = timecount % 86400;     	//得到秒钟数   	   
+	date_time[3] = temp / 3600;   	///小时
+	date_time[4] = (temp%3600)/60; 	///分钟	
+	date_time[5] = (temp%3600)%60; 	///秒钟
+	date_time[0] = year - 2000;			///年
+	#ifdef RTC_DEBUG
+		printf("%2d年%02d月%02d日%2d时%02d分%02d秒\r\n",
+						 date_time[0],
+						 date_time[1],
+						 date_time[2],
+						 date_time[3],
+						 date_time[4],
+						 date_time[5]
+						 );
+	#endif
+}
+/******************************************************
+RTC时间设置函数
+年 月 日 时 分 秒
+******************************************************/
+void RtcSetCalendarTime(uint8 data[])
+{
+	uint8  mon_table[12]={31,28,31,30,31,30,31,31,30,31,30,31};
+	uint16 t,year = data[0] + 2000;
+	uint32 seccount=0;
+	
+	if(year<1970||year>2099)return;	   
+	
+	for(t=1970;t<year;t++){													//把所有年份的秒钟相加
+		if((t&0X03) == 0)	seccount+=31622400;					//闰年的秒钟数
+		else 							seccount+=31536000; 				//平年的秒钟数
+	}
+	data[1]-=1;
+	for(t=0;t<data[1];t++){	   											//把前面月份的秒钟数相加
+		seccount += (uint32)mon_table[t]*86400;				//月份秒钟数相加
+		if(((year&0X03) == 0)&&t==1)seccount+=86400;	//闰年2月份增加一天的秒钟数	   
+	}
+	seccount += (uint32)(data[2]-1)*86400;					//把前面日期的秒钟数相加 
+	seccount += (uint32)data[3]*3600;								//小时秒钟数
+  seccount += (uint32)data[4]*60;	 								//分钟秒钟数
+	seccount += data[5];														//最后的秒钟加上去
+
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_PWR | RCC_APB1Periph_BKP, ENABLE);	//使能PWR和BKP外设时钟  
+	PWR_BackupAccessCmd(ENABLE);								//使能RTC和后备寄存器访问 
+	RTC_SetCounter(seccount);										//设置RTC计数器的值
+	RTC_WaitForLastTask();											//等待最近一次对RTC寄存器的写操作完成  	
+
+}
+
 void RtcConfiguration(void)
 {
 	uint16 i = 800;
@@ -249,34 +354,13 @@ void RtcConfiguration(void)
 	RTC_SetPrescaler(32767);
 	RTC_WaitForLastTask();
 }
-void RtcSetCalendarTime(void)
-{
-	struct tm d_t;
-	time_t d_t_sec;
-	
-	RTC_ITConfig(RTC_IT_SEC, DISABLE);
-	
-	d_t.tm_year = 116;//100 + sys_work_para_struct.date_time[0];
-	d_t.tm_mon 	= 1;//sys_work_para_struct.date_time[1] - 1;
-	d_t.tm_mday = 1;//sys_work_para_struct.date_time[2];
-	d_t.tm_hour = 1;//sys_work_para_struct.date_time[3];
-	d_t.tm_min 	= 1;//sys_work_para_struct.date_time[4];
-	d_t.tm_sec 	= 1;//sys_work_para_struct.date_time[5];
 
-	d_t_sec = mktime(&d_t);
-	
-	RTC_WaitForLastTask();
-	RTC_SetCounter((u32)d_t_sec);
-	RTC_WaitForLastTask();
-	
-	RTC_ITConfig(RTC_IT_SEC, ENABLE);
-}
 void RtcInit(void)
 {
 	NVIC_InitTypeDef NVIC_InitStructure;
 	
 	RtcConfiguration();
-	RtcSetCalendarTime();
+	RtcSetCalendarTime(g_protime_union.arry);
 
 	NVIC_InitStructure.NVIC_IRQChannel = RTC_IRQn;
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 5;
@@ -312,39 +396,6 @@ void PvdInit(void)///低压中断
 }
 
 
-void RtcGetCalendarTime(uint8 date_time[])
-{
-	time_t t_s;
-	struct tm *d_t;
-	#ifdef RTC_DEBUG
-		char str_ch[256];
-		uint8 str_len;
-	#endif
-	t_s = (time_t)RTC_GetCounter();
-	d_t = localtime(&t_s);
-	d_t->tm_year += 1900;
-	
-	date_time[0] = d_t->tm_year - 2000;
-	date_time[1] = d_t->tm_mon + 1;
-	date_time[2] = d_t->tm_mday;
-	date_time[3] = d_t->tm_hour;
-	date_time[4] = d_t->tm_min;
-	date_time[5] = d_t->tm_sec;
-	
-	#ifdef RTC_DEBUG
-		FeedWtd();
-		str_len = sprintf(str_ch,"%2d年%02d月%02d日%2d时%02d分%02d秒\r\n",
-						 date_time[0],
-						 date_time[1],
-						 date_time[2],
-						 date_time[3],
-						 date_time[4],
-						 date_time[5]
-						 );
-		LocalUartFixedLenSend((uint8*)str_ch,str_len);
-		FeedWtd();
-	#endif
-}
 //运行系统时系统占用
 /*
 void SysTickInit(void)

@@ -10,41 +10,9 @@
 	#endif
 	
 	
-	#define VALID_VAL_DWORD_AA		0xAAAAAAAA
-	#define INVALID_VAL_DWORD_55	0x55555555
-	#define VALID_VAL_AA					0xAA
-	#define VALID_VAL_BB					0xBB
-	#define INVALID_VAL_55				0x55	
-	#define VALID_VAL_2A					0x2A
-	#define INVALID_VAL_FF				0xFF
-		
-
-	#define LSNAL_PAGE_SIZE 		0x200///盲区数据512字节/页
-	typedef struct 
-	{
-		char sms_city_center_num[LEN_32];///SIM卡所在城市短信中心
-		char second_sms_center_num[LEN_32];///部门内部短信中心2
-		char third_sms_cetner_num[LEN_32];///公司默认短信中心3
-		char software_version[LEN_32];///TIZA_开头，车机电压24V，版本号1.0,年月日
-	}SYS_CONST_PARA_STRUCT;///系统启动参数
-
-	typedef struct
-	{
-		uint32 program_update_flag;///程序更新标志
-		uint32 program_total_size;///字节总数
-		uint32 sys_para_init_flag;///参数重新初始化标志
-	}SYS_BOOT_PARA_STRUCT;///系统启动参数
-	
-	
-	typedef struct
-	{
-		uint16 sys_time3_200ms_count;						///系统毫秒计数器
-		
-		uint8  sys_upheart_count;								///系统上传心跳计时
-	}SYS_MISC_RUN_STRUCT;///系统运行参数
 
 	
-	EXTERN_SYS_PARA SYS_MISC_RUN_STRUCT 		g_sysmiscrun_struct;
+	
 	
 
 	

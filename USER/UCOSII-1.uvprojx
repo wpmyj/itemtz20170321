@@ -76,9 +76,9 @@
             <nStopB2X>0</nStopB2X>
           </BeforeMake>
           <AfterMake>
-            <RunUserProg1>0</RunUserProg1>
+            <RunUserProg1>1</RunUserProg1>
             <RunUserProg2>0</RunUserProg2>
-            <UserProg1Name></UserProg1Name>
+            <UserProg1Name>fromelf --bin --output ..\OBJ\UCOSII-1.bin ..\OBJ\UCOSII-1.axf</UserProg1Name>
             <UserProg2Name></UserProg2Name>
             <UserProg1Dos16Mode>0</UserProg1Dos16Mode>
             <UserProg2Dos16Mode>0</UserProg2Dos16Mode>
@@ -537,6 +537,11 @@
               <FileType>1</FileType>
               <FilePath>..\STM32F10x_FWLib\src\stm32f10x_tim.c</FilePath>
             </File>
+            <File>
+              <FileName>stm32f10x_flash.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\STM32F10x_FWLib\src\stm32f10x_flash.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -678,19 +683,29 @@
               <FilePath>..\src\tiza_can.c</FilePath>
             </File>
             <File>
-              <FileName>syspara.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\src\syspara.c</FilePath>
-            </File>
-            <File>
-              <FileName>systask.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\src\systask.c</FilePath>
-            </File>
-            <File>
               <FileName>test.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\src\test.c</FilePath>
+            </File>
+            <File>
+              <FileName>tiza_flash.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\tiza_flash.c</FilePath>
+            </File>
+            <File>
+              <FileName>tiza_syspara.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\tiza_syspara.c</FilePath>
+            </File>
+            <File>
+              <FileName>tiza_systask.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\tiza_systask.c</FilePath>
+            </File>
+            <File>
+              <FileName>tiza_ftp.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\tiza_ftp.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -706,6 +721,11 @@
               <FileName>tiza_business.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\inc\tiza_business.h</FilePath>
+            </File>
+            <File>
+              <FileName>tiza_driver.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\inc\tiza_driver.h</FilePath>
             </File>
           </Files>
         </Group>

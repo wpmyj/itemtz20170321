@@ -27,20 +27,23 @@
 	#define OFF_GPS_LED()			(GPIO_SetBits(GPIOD, GPIO_Pin_13))
 	#define CPL_GPS_LED()			(GPIOD->ODR ^= GPIO_Pin_13)
 	
-//	#define FEED_WDT()       	(GPIOD->ODR ^= GPIO_Pin_8)
-	#define FEED_WDT()       	(GPIOE->ODR ^= GPIO_Pin_2)	
+	#define ON_ERR_LED()			(GPIO_ResetBits(GPIOE, GPIO_Pin_3))
+	#define OFF_ERR_LED()			(GPIO_SetBits(GPIOE, GPIO_Pin_3))
+	#define CPL_ERR_LED()			(GPIOE->ODR ^= GPIO_Pin_3)
+	
+	#define FEED_WDT()       	(GPIOD->ODR ^= GPIO_Pin_8)	
 	
 	#define ON_485232_PWR()		(GPIO_SetBits(GPIOC, GPIO_Pin_7))///485
 	#define OFF_485232_PWR()	(GPIO_ResetBits(GPIOC, GPIO_Pin_7))
 	#define ENABLE_TX485()		(GPIO_SetBits(GPIOD, GPIO_Pin_4))
 	#define ENABLE_RX485()		(GPIO_ResetBits(GPIOD, GPIO_Pin_4))
 
-//	#define ON_GPRS_PWR()			(GPIO_SetBits(GPIOC, GPIO_Pin_4))///L218
-//	#define OFF_GPRS_PWR()		(GPIO_ResetBits(GPIOC, GPIO_Pin_4))
-	#define ON_GPRS_PWR()			(GPIO_SetBits(GPIOD, GPIO_Pin_8))///L218
-	#define OFF_GPRS_PWR()		(GPIO_ResetBits(GPIOD, GPIO_Pin_8))
+	#define ON_GPRS_PWR()			(GPIO_SetBits(GPIOC, GPIO_Pin_4))///L218
+	#define OFF_GPRS_PWR()		(GPIO_ResetBits(GPIOC, GPIO_Pin_4))
 	#define LOW_GPRS_IGT()		(GPIO_SetBits(GPIOE, GPIO_Pin_15))
 	#define HIGH_GPRS_IGT()		(GPIO_ResetBits(GPIOE, GPIO_Pin_15))
+	#define LOW_GPRS_DTR()		(GPIO_SetBits(GPIOC, GPIO_Pin_2))
+	#define HIGH_GPRS_DTR()		(GPIO_ResetBits(GPIOC, GPIO_Pin_2))
 
 	#define ON_CT5V_PWR()			(GPIO_SetBits(GPIOB, GPIO_Pin_13))///CAN电源、电池充电
 	#define OFF_CT5V_PWR()		(GPIO_ResetBits(GPIOB, GPIO_Pin_13))
@@ -51,7 +54,7 @@
 	
 	#define LOCAL_USART_BPR		115200 //9600///本地串口
 	#define GPS_USART_BPR			115200
-	#define GPRS_USART_BPR		38400
+	#define GPRS_USART_BPR		115200
 	#define METER_USART_BPR		9600///仪表串口
 	#define RS485_USART_BPR		9600///485串口
 
@@ -79,8 +82,8 @@
 //	#define LOCAL_PRO_DEBUG   		3
 //	#define LOCAL_GPS_DEBUG   		4
 
-	#define LOCAL_UART_BUF_LEN 		256
-	#define GPS_UART_BUF_LEN   		300//800//
+	#define LOCAL_UART_BUF_LEN 		64
+	#define GPS_UART_BUF_LEN   		300//1000//
 	#define GPRS_UART_BUF_LEN  		1500
 	#define METER_UART_BUF_LEN   	256
 	#define RS485_UART_BUF_LEN   	256	
@@ -131,7 +134,7 @@
 	
 	
 	DRIVER_EXTERN void RtcConfiguration(void);
-	DRIVER_EXTERN void RtcSetCalendarTime(void);
+	DRIVER_EXTERN void RtcSetCalendarTime(uint8 data[]);
 	DRIVER_EXTERN void RtcInit(void);
 	DRIVER_EXTERN void SysClkConfigStop(void);
 	DRIVER_EXTERN void TIM3_Int_Init(uint16 arr,uint16 psc);
@@ -140,6 +143,7 @@
 	DRIVER_EXTERN void DmaInit(void);
 	DRIVER_EXTERN void IwdgInit(void);
 	DRIVER_EXTERN void FeedWtd(void);
+	DRIVER_EXTERN void SysReset(void);
 	DRIVER_EXTERN void PvdInit(void);
 	DRIVER_EXTERN void AdcInit(void);
 	
