@@ -18,28 +18,24 @@
 //设置任务优先级
 #define START_TASK_PRIO      			11 //开始任务的优先级设置为最低
 #define LED0_TASK_PRIO       			7 
-#define LOCAL_UART_TASK_PRIO      9 
 #define L218_TASK_PRIO      			5 
 #define PERIOD_TASK_PRIO      		6 
 #define TEST_TASK_PRIO      			10 
 //设置任务堆栈大小
 #define START_STK_SIZE  					64
 #define LED0_STK_SIZE  		    		128
-#define LOCAL_UART_STK_SIZE  			512
 #define L218_STK_SIZE  						1024
 #define PERIOD_STK_SIZE  					512
 #define TEST_STK_SIZE  						256
 //任务堆栈	
 OS_STK START_TASK_STK[START_STK_SIZE];
 OS_STK LED0_TASK_STK[LED0_STK_SIZE];
-OS_STK LOCAL_UART_TASK_STK[LOCAL_UART_STK_SIZE];
 OS_STK L218_TASK_STK[L218_STK_SIZE];
 OS_STK PERIOD_TASK_STK[PERIOD_STK_SIZE];
 OS_STK TEST_TASK_STK[TEST_STK_SIZE];
 //任务函数
 void start_task(void *pdata);	
 void led0_task(void *pdata);
-void local_uart_task(void *pdata);
 void L218_task(void *pdata);
 void Period_task(void *pdata);
 void Test_task(void *pdata);
@@ -62,9 +58,22 @@ void System_Mode_Init(void)
 	g_sysmiscrun_struct.have_sysAlarm_count  = 0;											///系统出现报警倒计时
 	g_sysmiscrun_struct.save_sysAlarm_numb   = SYS_SAVEALARM_NUMB;		///未出现报警时 保留INTFLAH的记录条数  
 	g_sysmiscrun_struct.assist_gps_flag      = 2;
-	g_provbattsys_union.Item.framebatt_num   = 96;
-	g_protbattsys_union.Item.btprobe_num		 = 24;
+	g_provbattsys_union.Item.sigbatt_num   	 = PRO_SIGBATT_MAXNUMBER;// 0;//
+	//g_provbattsys_union.Item.framebatt_num   = 0;//PRO_SIGBATT_MAXNUMBER;
+	g_protbattsys_union.Item.btprobe_num		 = PRO_BTPROBE_MAXNUMBER;// 0;//
 	memset(can_struct.rx_can_buf_flag, 0xFF, CAN_RX_ID_NUM);
+	
+	g_proupgread_struct.ip_domain[2] = 202;
+	g_proupgread_struct.ip_domain[3] = 102;
+	g_proupgread_struct.ip_domain[4] = 90;
+	g_proupgread_struct.ip_domain[5] = 179;
+	g_proupgread_struct.port         = 21;
+	memcpy(g_proupgread_struct.user_name,"Vehicle",7);
+	g_proupgread_struct.user_name[7] = 0;
+	memcpy(g_proupgread_struct.pass_word,"Vehicle#*",9);
+	g_proupgread_struct.pass_word[9] = 0;
+	memcpy(g_proupgread_struct.file_path,"/TIZA_FTP.bin",13);
+	g_proupgread_struct.file_path[13] = 0;
 	
 	GpioInit();
 //	IwdgInit();	
@@ -76,7 +85,7 @@ void System_Mode_Init(void)
 	FeedWtd();
 	ExteFlashInit();
 	RtcInit();
-	AdcInit();
+//	AdcInit();
 	DmaInit();
 //	TIM3_Int_Init(1999,7199);//10Khz的计数频率，计数到2000为200ms  
 	FeedWtd();
@@ -91,7 +100,8 @@ int main(void)
 {	
 	delay_init();	    //延时函数初始化	 
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);//设置中断优先级分组为组2：2位抢占优先级，2位响应优先级
-	 
+	 FeedWtd();
+	
 	OSInit();   
  	OSTaskCreate(start_task,(void *)0,(OS_STK *)&START_TASK_STK[START_STK_SIZE-1],START_TASK_PRIO );//创建起始任务
 	OSStart();	  	 
@@ -113,9 +123,6 @@ void start_task(void *pdata)
 #if 1		//LED0任务
 	OSTaskCreate(led0_task,			 	(void *)0,(OS_STK*)&LED0_TASK_STK[LED0_STK_SIZE-1],						LED0_TASK_PRIO);	
 #endif	
-#if 0		//LOCAL_UART任务
-	OSTaskCreate(local_uart_task,	(void *)0,(OS_STK*)&LOCAL_UART_TASK_STK[LOCAL_UART_STK_SIZE-1],LOCAL_UART_TASK_PRIO);
-#endif
 #if 1		//L218任务
 	OSTaskCreate(L218_task,				(void *)0,(OS_STK*)&L218_TASK_STK[L218_STK_SIZE-1],						L218_TASK_PRIO);
 #endif
@@ -138,6 +145,7 @@ void start_task(void *pdata)
 //LED0任务
 void led0_task(void *pdata)
 {	 	
+	uint32 ftpflshadd;
 	
 	while(1)
 	{
@@ -146,7 +154,7 @@ void led0_task(void *pdata)
 //		CPL_ERR_LED();
 		OSTimeDlyHMSM(0, 0, 1, 0);		
 		FeedWtd();
-		
+
 	
 		if(g_propostion_union.Item.status.bit.B0 ==1){
 			OFF_GPS_LED();	//未定位
@@ -176,65 +184,6 @@ void led0_task(void *pdata)
 		
 	};
 }
-
-//LOCAL_UART任务
-void local_uart_task(void *pdata)
-{	  
-	uint8 i=0, count=0;//, data[256];	//最多处理256个数据
-		
-	while(1)
-	{
-		if(i < 5){
-			OSTimeDlyHMSM(0, 0, 3, 0);
-			
-			if(g_gprs_data_struct.sendDataStatus == GPRS_SENDDATA_IDLE){
-				g_gprs_data_struct.sendDataStatus = GPRS_SENDDATA_OUT;
-				GPRStestfun();
-//				i++;
-			}
-		}
-		else{
-			BusiDisconSer();
-			printf("\r\n ===========================================BusiDisconSer\r\n");
-			OSTimeDlyHMSM(0, 2, 0, 0);
-			BusiConSer();
-			printf("\r\n ===========================================BusiConSer\r\n");
-			for(count=0;count<6;count++){
-				OSTimeDlyHMSM(0, 0, 20, 0);
-				if(g_gprs_data_struct.sendDataStatus == GPRS_SENDDATA_IDLE){
-					g_gprs_data_struct.sendDataStatus = GPRS_SENDDATA_OUT;
-				}
-			}
-			//OSTimeDlyHMSM(0, 2, 0, 0);
-			BusiDisconGps();
-			printf("\r\n ===========================================BusiDisconGps\r\n");
-			for(count=0;count<6;count++){
-				OSTimeDlyHMSM(0, 0, 20, 0);
-				if(g_gprs_data_struct.sendDataStatus == GPRS_SENDDATA_IDLE){
-					g_gprs_data_struct.sendDataStatus = GPRS_SENDDATA_OUT;
-				}
-			}
-			//OSTimeDlyHMSM(0, 2, 0, 0);
-			BusiConGps();
-			printf("\r\n ===========================================BusiConGps\r\n");
-			for(count=0;count<6;count++){
-				OSTimeDlyHMSM(0, 0, 20, 0);
-				if(g_gprs_data_struct.sendDataStatus == GPRS_SENDDATA_IDLE){
-					g_gprs_data_struct.sendDataStatus = GPRS_SENDDATA_OUT;
-				}
-			}
-			//OSTimeDlyHMSM(0, 2, 0, 0);
-			BusiResetModule();		
-			printf("\r\n ===========================================BusiResetModule\r\n");
-				
-			i = 0;
-		}
-		
-
-		
-	}
-}
-
 
 
 

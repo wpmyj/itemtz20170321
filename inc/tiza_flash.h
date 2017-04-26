@@ -42,22 +42,34 @@
 		   
 			//FLASH起始地址
 	#define STM32_FLASH_BASE 0x08000000 	//STM32 FLASH的起始地址
-	#define STM32_FLASH_SIZE 0x80000 		//STM32 FLASH的大小1M
-			 
-			
-
+	#define STM32_FLASH_SIZE 0x80000 			//STM32 FLASH的大小512k	
+	#define ST32_PAGE_SIZE	 0x800 				//2k
+	
+	#define FLASH_UASER1_SATART_ADD					0x01E000		
+	#define FLASH_UASER1_END_ADD						0x01FFFF		//16K	
+	#define FlASH_STORE_START_ADD						0x020000	
+	#define FLASH_STORE_END_ADD							0x03BFFF		//112K
+	#define FLASH_UASER2_SATART_ADD					0x03C000		
+	#define FLASH_UASER2_END_ADD						0x03FFFF		//16K	
+	#define FLASH_OTHER_SATART_ADD					0x040000		
+	#define FLASH_OTHER_END_ADD							0x800000		//256K	
 	
 	
-	#define ST32_PAGE_SIZE										0x800 	
-	#define FlASH_STORE_START_ADDR						0x20000	
-	#define SYS_BOOT_PARA_STRUCT_START_ADDR		(FlASH_STORE_START_ADDR-0x2000)
-	#define FLASH_STORE_END_ADDR							0x40000
-	#define FLASH_LSNAL_START_ADDR						FlASH_STORE_START_ADDR
-	#define FLASH_LSNAL_MAX_PAGES							((FLASH_STORE_END_ADDR - FlASH_STORE_START_ADDR -  0x4000)/0x200)
+	#define FLASH_BOOT_PARA_START_ADDR				FLASH_UASER1_SATART_ADD		
+	#define FLASH_BOOT_PARA_END_ADDR					0x01E7FF		//2k	
+	#define FLASH_ALARM_START_ADDR						FlASH_STORE_START_ADD	//64PAGE
+	#define FLASH_ALARM_END_ADDR							0x29FFF								//与SYS_ALARM_MAXINDEX对应
+	#define FLASH_ALARM_INDEXPAGE							0x2A000								//2K
+	#define FLASH_SAVEPARA_INDEXPAGE					FLASH_UASER2_SATART_ADD				
+	#define FLASH_SAVEVIN_INDEXPAGE						0x03F800							//2K
+	
+	
+	#define FTP_BLIND_FLASH_START 	 0x8020000
+	#define FTP_BLIND_FLASH_END 		(0x8040000 - 0x2000)
 
 	INTFLSAH_EXTERN uint8 FlashErase(uint32 page_addr);
 	INTFLSAH_EXTERN uint8 FlashWrite(uint32 start_addr,uint8 wr_data[], uint16 len);
-	INTFLSAH_EXTERN void FlashRead(uint32 start_addr, uint8 rd_data[], uint16 len);
+	INTFLSAH_EXTERN void  FlashRead(uint32 start_addr, uint8 rd_data[], uint16 len);
 	INTFLSAH_EXTERN uint8 CpuFlashWrite(uint32 Addr, uint8 *Data, uint16 Len);	
 		
 		

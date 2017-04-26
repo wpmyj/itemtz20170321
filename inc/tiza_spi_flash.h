@@ -12,12 +12,17 @@
 /*
 	盲区			0x00000000~0X005FFFFF		6M
 	盲区下标	1792					段，第7M开头的一段
-	其他			0x00700000    最后1M的首地址
+	盲区下标	0x00700000    最后1M的首地址
 */	
 	
 	
 // 一个SECTOR大小为4096
-#define FLASH_SECTOR_SIZE	4096
+#define SPIFLASH_SECTOR_SIZE	4096
+	
+#define SPIFLASH_LSNAL_START_ADD		0x00000000
+#define SPIFLASH_LSNAL_END_ADD			0X005FFFFF
+#define SPIFLASH_LSNAL_ADD					0x00700000
+#define SPIFLASH_LSNAL_SEC					1792
 
 #define SPI_FRAM_CS_LOW()       GPIO_ResetBits(GPIOA, GPIO_Pin_4)
 #define SPI_FRAM_CS_HIGH()      GPIO_SetBits(GPIOA, GPIO_Pin_4)				

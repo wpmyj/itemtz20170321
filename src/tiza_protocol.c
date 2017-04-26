@@ -5,8 +5,6 @@
 
 
 static void ProPutIntoLsnal(uint8 data[],uint16 len,uint8 cmd);
-static void ProConstructFrameTail(uint8 data[],uint16 tx_len);
-
 
 void ProWrite_VIN(uint8* str)
 {
@@ -57,15 +55,15 @@ void ProParaInit(void)
 	}
 	g_sysprivatepara_struct.vehicle_start_flag 	= 0;			//汽车启动标志		1启动			0未启动
 	g_sysprivatepara_struct.link_center_flag 		= 0;			//连接平台标志		1已连接		0未连接
-	g_sysprivatepara_struct.updata_sengding 		= 1;			//数据上传标志		1正在上传 0空闲 
+	g_sysprivatepara_struct.updata_sending 		= 1;				//数据上传标志		1正在上传 0空闲 
 	//VIN码
 //	ProRead_VIN();
-	memcpy(g_VIN,"A1234567890123456",17);	
+//	memcpy(g_VIN,"A1234567890123456",17);	
 //	memcpy(g_VIN,"A0000013776516481",17);	//周姐测2 静电 重发1次
 //	memcpy(g_VIN,"A0000013515127369",17);		//胡明定点测试1  30s
-//	memcpy(g_VIN,"A0000013585107257",17);	//我路测测  30s
+	memcpy(g_VIN,"A0000013585107257",17);	//我路测测  30s
 //	memcpy(g_VIN,"A0000013601464223",17);	//胡明路测3  30s  无重启模块
-//	memcpy(g_VIN,"A0000015261409343",17);	//周姐测4	静电  重发1次
+//	memcpy(g_VIN,"A0000015261409343",17);	//2017.04.21发给长沙
 		
 	g_sysmiscrun_struct.SavePeri_count 	= 0;							///周期保存计时
 	g_sysmiscrun_struct.NorUpPeri_count = 0;							///正常周期上传信息计时
@@ -130,7 +128,7 @@ void ProLsnalHeadTailSave(void)
 	if(!res){// 失败
 		return;
 	}
-	ExteFlashWrite(SYS_LSNAL_SPIOTHER_ADDR, data, 9);
+	ExteFlashWrite(SYS_LSNAL_SPIINDEX_ADDR, data, 9);
 }
 static void ProLsnalPageSave(uint8 data[],uint16 len)
 {
@@ -158,7 +156,6 @@ static void ProLsnalPageSave(uint8 data[],uint16 len)
 	if(g_syslsnal_struct.headindex == g_syslsnal_struct.tailindex){
 		//tail前移8包即整段擦除时舍掉其余7包数据；若要不舍需另外开一段临时保存旧数据，这样会增加擦除次数
 		g_syslsnal_struct.tailindex = (g_syslsnal_struct.tailindex+8)%SYS_LSNAL_SPIMAXINDEX;
-		printf("TIZA_PROTOCL.C LINE 132: \n");
 	}
 	
 	ProLsnalHeadTailSave();
@@ -168,10 +165,7 @@ RETURN_LAB:
 	return;
 }
 static void ProLsnalDataSave(uint8 data[],uint16 len,uint8 cmd)
-{
-//	uint16 tmp_len,tmp;
-//	uint32 bias_addr;
-	
+{	
 	if(cmd == PRO_UP_LSNAL_INFO_ID){									// 盲区保存过不会再保存
 		goto RETURN_LAB;
 	}	
@@ -257,10 +251,10 @@ static uint8 ProMotor(uint8 data[])
 		data[index++] = g_promotor_union[i].Item.serial;
 		data[index++] = g_promotor_union[i].Item.status;
 		data[index++] = g_promotor_union[i].Item.ctr_tem;
-		data[index++] = g_promotor_union[i].arry[3];	//rpm
-		data[index++] = g_promotor_union[i].arry[2];
-		data[index++] = g_promotor_union[i].arry[5];	//torque
+		data[index++] = g_promotor_union[i].arry[5];	//rpm
 		data[index++] = g_promotor_union[i].arry[4];
+		data[index++] = g_promotor_union[i].arry[7];	//torque
+		data[index++] = g_promotor_union[i].arry[6];
 		data[index++] = g_promotor_union[i].Item.motor_tem;
 		data[index++] = g_promotor_union[i].arry[9];	//ctr_in_vol
 		data[index++] = g_promotor_union[i].arry[8];	
@@ -270,7 +264,7 @@ static uint8 ProMotor(uint8 data[])
 	
 	return index;
 }
-static uint8 ProFuelCell(uint8 data[])
+/*static uint8 ProFuelCell(uint8 data[])
 {
 	uint8 index=0;
 	
@@ -313,7 +307,7 @@ static uint8 ProEngine(uint8 data[])
 	data[index++] = g_proengine_union.arry[2];
 	
 	return index;
-}
+}*/
 static uint8 ProPostion(uint8 data[])
 {
 	uint8 index=0;
@@ -415,8 +409,21 @@ static uint8 ProBVoltage(uint8 data[])
 	
 	data[index++] = (uint8)PRO_BVOLTAGE_FLAG;
 	data[index++] = (uint8)PRO_BATTSYS_NUMBER;
+	
+	g_provbattsys_union.Item.framebatt_id		 = 1;
+	
+	if(g_provbattsys_union.Item.sigbatt_num > PRO_SIGBATT_MAXNUMBER){
+		g_provbattsys_union.Item.sigbatt_num = PRO_SIGBATT_MAXNUMBER;
+	}
+//	if(g_provbattsys_union.Item.framebatt_num <= PRO_SIGBATT_MAXNUMBER){  //本帧最大200 这里不超过96
+		g_provbattsys_union.Item.framebatt_num = g_provbattsys_union.Item.sigbatt_num;
+//	}
+//	else{
+//		g_provbattsys_union.Item.framebatt_num = PRO_SIGBATT_MAXNUMBER;
+//	}
 	//0~12 *i
 	for(i=0;i < PRO_BATTSYS_NUMBER;i++){
+		g_provbattsys_union.Item.serial = i + 1;
 		data[index++] = g_provbattsys_union.Item.serial;
 		data[index++] = g_provbattsys_union.arry[3];	//voltage
 		data[index++] = g_provbattsys_union.arry[2];
@@ -441,11 +448,15 @@ static uint8 ProBTemperature(uint8 data[])
 	
 	data[index++] = (uint8)PRO_BTEMPERATURE_FLAG;
 	data[index++] = (uint8)PRO_BATTSYS_NUMBER;
-	//0~12 *i
+	//0~12 *i  PRO_BTPROBE_MAXNUMBER
 	for(i=0;i < PRO_BATTSYS_NUMBER;i++){
+		g_protbattsys_union.Item.serial = i + 1;
 		data[index++] = g_protbattsys_union.Item.serial;
-		data[index++] = g_protbattsys_union.arry[2];	//btprobe_num
-		data[index++] = g_protbattsys_union.arry[1];
+		data[index++] = g_protbattsys_union.arry[1];	//btprobe_num
+		data[index++] = g_protbattsys_union.arry[0];
+		if(g_protbattsys_union.Item.btprobe_num > PRO_BTPROBE_MAXNUMBER){
+			g_protbattsys_union.Item.btprobe_num = PRO_BTPROBE_MAXNUMBER;
+		}			
 		memcpy(&data[index],g_btprobe_val[i],g_protbattsys_union.Item.btprobe_num);
 		index += g_protbattsys_union.Item.btprobe_num;//小心越界
 	}
@@ -458,7 +469,7 @@ uint16 Pro_RealTime_Data(uint8 data[])
 	uint16 len;
 	uint8  *p;
 	
-	g_provehice_union.Item.mileage++;// qlj 暂作报文序号用  后面删除	
+//	g_provehice_union.Item.mileage++;// qlj 暂作报文序号用  后面删除	
 	
 	p = data;
 	// qlj 考虑数据量大 越界问题 是否分包？
@@ -586,7 +597,7 @@ static uint16 ProUpQueryParams(uint8 data[], uint8 len, uint8* tx_buf)
 	}
 		
 	*p++ = len; //请求总条数
-	for(i=0;i < len;i++){
+	for(i=1;i <= len;i++){
 		switch(data[i]){
 			case PRO_PARA_SAVEPERI_ID:{
 				*p++ = (uint8)PRO_PARA_SAVEPERI_ID;
@@ -695,11 +706,7 @@ RETURN_LAB:
 static void ProUpAck(uint8 data[], uint16 len, uint8 flag)
 {
 	uint8  tx_buf[225];	
-	uint16 tx_len;
 	
-	while(g_sysprivatepara_struct.updata_sengding != 0){
-		OSTimeDlyHMSM(0, 0, 0, 100);
-	}
 	memcpy(tx_buf, data, len);
 	tx_buf[3]   = flag;
 	ProConstructFrameTail(tx_buf, len);
@@ -713,7 +720,8 @@ static void ProCtrUpgrade(uint8 data[],uint8 len)
 {
 	 //‘;’分隔，某个参数没有则为空
 	//URL地址;拨号点名称;拨号用户名;拨号密码;地址;端口;生产商代号;硬件版本;固件版本;连接到升级服务器时限
-	uint8 i,j=0,index[PRO_UPGRADE_PARA_NUM];
+	uint8 res=0,i,j=0,index[PRO_UPGRADE_PARA_NUM];
+	uint8  tmpdata[40];
 	
 	for(i=0; i < len; i++){
 		if(data[i] == ';'){
@@ -724,24 +732,36 @@ static void ProCtrUpgrade(uint8 data[],uint8 len)
 	if(j!=PRO_UPGRADE_PARA_NUM){
 		goto RETURN_LAB;
 	}
+	
 	if(index[0]){
-		memcpy(g_proupgread_struct.dial_APN, data, index[0]);
-		g_proupgread_struct.dial_APN[j] = 0; //保险加结束符
-	}
+		memcpy(g_proupgread_struct.file_path, data, index[0]);
+		g_proupgread_struct.file_path[index[0]] = 0; //保险加结束符
+		res++;
+	}	
 	i = index[0] + 1;//起始下标
 	j = index[1] - i;//长度
+	
 	if(j){
-		memcpy(g_proupgread_struct.user_name, &data[i], j);
-		g_proupgread_struct.user_name[j] = 0; //保险加结束符
-	}				
+		memcpy(g_proupgread_struct.dial_APN, &data[i], j);
+		g_proupgread_struct.dial_APN[j] = 0; //保险加结束符
+		res++;
+	}
 	i = index[1] + 1;//起始下标
 	j = index[2] - i;//长度
 	if(j){
-		memcpy(g_proupgread_struct.pass_word, &data[i], j);
-		g_proupgread_struct.pass_word[j] = 0; //保险加结束符
+		memcpy(g_proupgread_struct.user_name, &data[i], j);
+		g_proupgread_struct.user_name[j] = 0; //保险加结束符
+		res++;
 	}				
 	i = index[2] + 1;//起始下标
 	j = index[3] - i;//长度
+	if(j){
+		memcpy(g_proupgread_struct.pass_word, &data[i], j);
+		g_proupgread_struct.pass_word[j] = 0; //保险加结束符
+		res++;
+	}				
+	i = index[3] + 1;//起始下标
+	j = index[4] - i;//长度
 	if(j>=4){
 		if(j==4){
 			g_proupgread_struct.ip_domain[0] = 0;
@@ -751,68 +771,50 @@ static void ProCtrUpgrade(uint8 data[],uint8 len)
 		else{
 			memcpy(g_proupgread_struct.ip_domain, &data[i], j);
 		}
-	}				
-	i = index[3] + 1;//起始下标
-	j = index[4] - i;//长度
-	if(j==2){
-		g_proupgread_struct.port = (data[i]<<8) + data[i+1]; 
+		res++;
 	}				
 	i = index[4] + 1;//起始下标
 	j = index[5] - i;//长度
-	if(j==4){
-		g_proupgread_struct.terminal_id = (data[i]<<24) +(data[i+1]<<16) +(data[i+2]<<8) + data[i+3]; 
+	if(j==2){
+		g_proupgread_struct.port = (data[i]<<8) + data[i+1]; 
+		res++;
 	}				
 	i = index[5] + 1;//起始下标
 	j = index[6] - i;//长度
-	if(j>=4){
-		memcpy(g_proupgread_struct.HDVers, &data[i], 5);
-	}
+	if(j==4){//字符串
+		g_proupgread_struct.terminal_id = (data[i]<<24) +(data[i+1]<<16) +(data[i+2]<<8) + data[i+3]; 
+		res++;
+	}				
 	i = index[6] + 1;//起始下标
 	j = index[7] - i;//长度
-	if(j>=5){
-		memcpy(g_proupgread_struct.SFVers, &data[i], 5);
-	}	
+	if(j>=4){
+		memcpy(g_proupgread_struct.HDVers, &data[i], 5);
+		res++;
+	}
 	i = index[7] + 1;//起始下标
 	j = index[8] - i;//长度
-	if(j){
-		memcpy(g_proupgread_struct.file_path, &data[i], j);
-		g_proupgread_struct.file_path[j] = 0; //保险加结束符
+	if(j>=5){
+		memcpy(g_proupgread_struct.SFVers, &data[i], 5);
+		res++;
 	}	
 	i = index[8] + 1;//起始下标
 	j = index[9] - i;//长度
 	if(j==2){
 		g_proupgread_struct.overtime = (data[i]<<8) + data[i+1]; 
+		res++;
 	}
 	
-	g_proupgread_struct.flag = 1;
+//	memcpy(tmpdata,data - 31,30);
+//	tmpdata[22] = 0;
+//	tmpdata[23] = 6;
+	if(res == 10){
+		ProUpAck(tmpdata, 30, PRO_ACK_SUCCEED_FLAG);//ACK
+		g_sysmiscrun_struct.ProgramUpgrade_flag = 1;
+	}
+	else{
+		ProUpAck(tmpdata, 30, PRO_ACK_FAILED_FLAG);// 
+	}
 	
-	data[22] = 0;
-	data[23] = 6;
- 	ProUpAck(data, 30, PRO_ACK_SUCCEED_FLAG);// qlj 要不要ACK?
-	
-/* 	if(res)								// qlj ftp升级待编写
-	{
-		res = FtpMain();
-		if(res)
-		{
-			upgrade_res = SUCCESS_ACK;
-		}
-		
-		UdpIpPortInit();
-		ProUpUpgradeResult(upgrade_res);///上传后台,升级标志
-		
-		if(res)
-		{
-			LocalDebug("upgrade_success\r\n",StrLen("upgrade_success\r\n",0),LOCAL_TEST_DEBUG);
-			LocalCommFtpState(0,ftp_struct.ftp_file_total_size,ftp_struct.ftp_rx_file_byte_counter);
-			SysReset();///置程序更新标志，复位；
-		}
-		else
-		{
-			LocalDebug("upgrade_fail\r\n",StrLen("upgrade_fail\r\n",0),LOCAL_TEST_DEBUG);
-			LocalCommFtpState(1,ftp_struct.ftp_file_total_size,ftp_struct.ftp_rx_file_byte_counter);
-		}
-	}  */
 	
 RETURN_LAB:
 	return;
@@ -903,13 +905,14 @@ static void ProDownParaQuiry(uint8 data[],uint8 len)
 	uint16 tx_len;
 	uint8  tmp_num;
 	
-	tmp_num = data[PRO_DATA_INDEX+7];
-	memcpy(tx_buf, data, PRO_DATA_INDEX);		//保留部分
-	tx_len = ProUpQueryParams(data+PRO_DATA_INDEX+8, tmp_num, &tx_buf[PRO_DATA_INDEX]);
+	tmp_num = data[PRO_DATA_INDEX+6];
+	memcpy(tx_buf, data, PRO_DATA_INDEX+6);		//保留部分 到时间
+	tx_len = ProUpQueryParams(data+PRO_DATA_INDEX+6, tmp_num, &tx_buf[PRO_DATA_INDEX+6]);
 	if(tx_len){
-		tx_len += PRO_DATA_INDEX;
+		tx_len += 6;
 		tx_buf[22] = (uint8)(tx_len >> 8);
 		tx_buf[23] = (uint8)(tx_len & 0xFF);
+		tx_len += PRO_DATA_INDEX;
 		ProUpAck(tx_buf, tx_len, PRO_ACK_SUCCEED_FLAG);		
 	}
 	else{
@@ -920,19 +923,20 @@ static void ProDownParaQuiry(uint8 data[],uint8 len)
 }
 static void ProDownSetPara(uint8 data[],uint8 len)
 {
-	uint8  *p,tmp_data[PRO_DOMAINLEN_MAX];
-	uint8  tmp_num,i,tmp_id;
+	uint8  *p,tx_buf[40];
+	uint8  tmp_num,i,tmp_id;//,tx_len;
 	uint16 tmp;
 	
-	tmp_num = data[PRO_DATA_INDEX+7];
-	p = data+PRO_DATA_INDEX+8;
+	memcpy(tx_buf, data, PRO_DATA_INDEX+6);
+	tmp_num = data[PRO_DATA_INDEX+6];
+	p = data+PRO_DATA_INDEX+7;
 	for(i=0;i < tmp_num;i++){
 		tmp_id = *p++;
 		switch(tmp_id){
 			case PRO_PARA_SAVEPERI_ID:{
 				tmp = *p++;
 				tmp = (tmp<<8) + *p++;
-				if(tmp>=0 && tmp<=60000)
+				if(tmp<=60000 || tmp==0xFFFF)
 					g_propara_union.Item.SavePeri = tmp;		
 				else 
 					goto RETURN_LAB;
@@ -941,7 +945,7 @@ static void ProDownSetPara(uint8 data[],uint8 len)
 			case PRO_PARA_NORUPPERI_ID:{
 				tmp = *p++;
 				tmp = (tmp<<8) + *p++;
-				if(tmp>=1 && tmp<=600)
+				if((tmp>=1 && tmp<=600) || tmp==0xFFFF)
 					g_propara_union.Item.NorUpPeri = tmp;		
 				else 
 					goto RETURN_LAB;		
@@ -950,7 +954,7 @@ static void ProDownSetPara(uint8 data[],uint8 len)
 			case PRO_PARA_ALRUPPERI_ID:{
 				tmp = *p++;
 				tmp = (tmp<<8) + *p++;
-				if(tmp>=0 && tmp<=60000)
+				if(tmp<=60000 || tmp==0xFFFF)
 					g_propara_union.Item.AlrUpPeri = tmp;		
 				else 
 					goto RETURN_LAB;		
@@ -989,7 +993,7 @@ static void ProDownSetPara(uint8 data[],uint8 len)
 			case PRO_PARA_PORT_ID:{
 				tmp = *p++;
 				tmp = (tmp<<8) + *p++;
-				if(tmp>=0 && tmp<=65531)
+				if(tmp<=65531 || tmp==0xFFFF)
 					g_propara_union.Item.Port = tmp;		
 				else 
 					goto RETURN_LAB;		
@@ -997,7 +1001,7 @@ static void ProDownSetPara(uint8 data[],uint8 len)
 			}
 			case PRO_PARA_HEARTPERI_ID:{
 				tmp = *p++;
-				if(tmp>=1 && tmp<=240)
+				if((tmp>=1 && tmp<=240) || tmp==0xFF)
 					g_propara_union.Item.HeartPeri = tmp;		
 				else 
 					goto RETURN_LAB;		
@@ -1006,7 +1010,7 @@ static void ProDownSetPara(uint8 data[],uint8 len)
 			case PRO_PARA_T_ACK_TIM_ID:{
 				tmp = *p++;
 				tmp = (tmp<<8) + *p++;
-				if(tmp>=1 && tmp<=600)
+				if((tmp>=1 && tmp<=600) || tmp==0xFFFF)
 					g_propara_union.Item.TAckTim = tmp;		
 				else 
 					goto RETURN_LAB;			
@@ -1015,7 +1019,7 @@ static void ProDownSetPara(uint8 data[],uint8 len)
 			case PRO_PARA_P_ACK_TIM_ID:{
 				tmp = *p++;
 				tmp = (tmp<<8) + *p++;
-				if(tmp>=1 && tmp<=600)
+				if((tmp>=1 && tmp<=600) || tmp==0xFFFF)
 					g_propara_union.Item.PAckTim = tmp;		
 				else 
 					goto RETURN_LAB;	
@@ -1023,7 +1027,7 @@ static void ProDownSetPara(uint8 data[],uint8 len)
 			}
 			case PRO_PARA_N_LOG_TIM_ID:{
 				tmp = *p++;
-				if(tmp>=1 && tmp<=240)
+				if((tmp>=1 && tmp<=240) || tmp==0xFF)
 					g_propara_union.Item.NLogTim = tmp;		
 				else 
 					goto RETURN_LAB;	
@@ -1031,7 +1035,7 @@ static void ProDownSetPara(uint8 data[],uint8 len)
 			}
 			case PRO_PARA_PDOMAINLEN_ID:{
 				tmp = *p++;
-				if(tmp <= PRO_DOMAINLEN_MAX)
+				if(tmp <= PRO_DOMAINLEN_MAX) 
 					g_propara_union.Item.PDomainLen = tmp;		
 				else 
 					goto RETURN_LAB;		
@@ -1062,7 +1066,7 @@ static void ProDownSetPara(uint8 data[],uint8 len)
 			case PRO_PARA_PPORT_ID:{
 				tmp = *p++;
 				tmp = (tmp<<8) + *p++;
-				if(tmp>=0 && tmp<=65531)
+				if(tmp<=65531|| tmp==0xFFFF)
 					g_propara_union.Item.PPort = tmp;		
 				else 
 					goto RETURN_LAB;	
@@ -1070,84 +1074,108 @@ static void ProDownSetPara(uint8 data[],uint8 len)
 			}
 			case PRO_PARA_MONITOR_ID:{
 				tmp = *p++;
-				if(tmp>=1 && tmp<=2)
+				if((tmp>=1 && tmp<=2) || tmp==0xFF)
 					g_propara_union.Item.Monitor = tmp;		
 				else 
 					goto RETURN_LAB;	
 				break;
 			}
 			
-			default:	goto RETURN_LAB;	break;
+			
+			case PRO_PARA_HDVERSION_ID:{				
+				memcpy(g_propara_union.Item.g_para_HDVers, p, 5);
+				p += 5;				
+				break;
+			}
+			case PRO_PARA_SFVERSION_ID:{				
+				memcpy(g_propara_union.Item.g_para_SFVers, p, 5);
+				p += 5;				
+				break;
+			}
+			
+			default:	
+				goto RETURN_LAB;	
+			break;
 		}
 	}
-	data[22] = 0;
-	data[23] = 6;
- 	ProUpAck(data, 30, PRO_ACK_SUCCEED_FLAG);// qlj 要不要ACK?
+	tx_buf[22] = 0;
+	tx_buf[23] = 6;
+ 	ProUpAck(tx_buf, 30, PRO_ACK_SUCCEED_FLAG);// ACK
 	ProWrite_SysPara();		//保存
 	SysReset();						//复位
 	return;	
 	
 RETURN_LAB:
-	data[22] = 0;
-	data[23] = 6;
- 	ProUpAck(data, 30, PRO_ACK_FAILED_FLAG);// qlj 要不要ACK?
+	tx_buf[22] = 0;
+	tx_buf[23] = 6;
+ 	ProUpAck(tx_buf, 30, PRO_ACK_FAILED_FLAG);// ACK
 	return;	
 }
 static void ProDownControl(uint8 data[],uint8 len)	
 {
-	// qlj 要不要应答
-	uint8  tmp_id;
+	uint8  tmp_id,tx_buf[40];
 	uint16 tmp;
+	
+	tx_buf[22] = 0;
+	tx_buf[23] = 6;
+	memcpy(tx_buf, data, PRO_DATA_INDEX+6);
 	
 	tmp = PRO_DATA_INDEX+1 +7;	//25+6+1 至少多少字节
 	tmp_id = data[PRO_DATA_INDEX+6];	//时间6 命令1
+	
 	switch(tmp_id){
 		case PRO_CTR_UPGRADE_ID:{	
 			if(len > (tmp+24)){
 				ProCtrUpgrade(&data[PRO_DATA_INDEX+7], len-tmp);
 			}			
-			break;
+			return;
 		}
-		case PRO_CTR_OFFTERM_ID:{		// qlj 待机还是怎么？？
-			break;
+		case PRO_CTR_OFFTERM_ID:{		
+			ProUpAck(tx_buf, 30, PRO_ACK_SUCCEED_FLAG);// ACK
+			//关闭终端
+			return;
 		}
 		case PRO_CTR_RSTTERM_ID:{	
+			ProUpAck(tx_buf, 30, PRO_ACK_SUCCEED_FLAG);// ACK
 			//保存盲区
 			SysReset();						//复位
-			break;
+			return;
 		}
 		case PRO_CTR_FACTRST_ID:{		
+			ProUpAck(tx_buf, 30, PRO_ACK_SUCCEED_FLAG);// ACK
 			//有没有要保存的
 			//恢复出厂设置
 			SetPara2FactoryReset();
 			ProWrite_SysPara();
 			SysReset();						//复位
-			break;
+			return;
 		}
 		case PRO_CTR_DISLINKSER_ID:{	
+			ProUpAck(tx_buf, 30, PRO_ACK_SUCCEED_FLAG);// ACK
 			//有没有要保存的
 			//断开连接	
-			break;
+			return;
 		}
-		case PRO_CTR_ALRTERM_ID:{		// qlj 怎么操作？？
-			break;
+		case PRO_CTR_ALRTERM_ID:{		
+			ProUpAck(tx_buf, 30, PRO_ACK_SUCCEED_FLAG);// ACK
+			// qlj 怎么操作？？
+			return;
 		}
 		case PRO_CTR_MONITOR_ID:{	
+			ProUpAck(tx_buf, 30, PRO_ACK_SUCCEED_FLAG);// ACK
 			g_propara_union.Item.Monitor = 0x01;	//置抽样标志
 			// qlj 怎么取消标志？抽样时要做哪些动作？
-			break;
-		}
-		
+			return;
+		}		
 		default:	 break;
 	}
-	data[22] = 0;
-	data[23] = 6;
- 	ProUpAck(data, 30, PRO_ACK_SUCCEED_FLAG);// qlj 要不要ACK?
+	
+ 	ProUpAck(tx_buf, 30, PRO_ACK_FAILED_FLAG);// qlj 要不要ACK?
 }
 
 
 /*******打包发送********/
-static void ProConstructFrameHead(uint8 data[],uint16 tx_len,uint8 cmd)
+void ProConstructFrameHead(uint8 data[],uint16 tx_len,uint8 cmd)
 {//大端模式，高位在前
 	uint8 *p = data;
 
@@ -1165,7 +1193,7 @@ static void ProConstructFrameHead(uint8 data[],uint16 tx_len,uint8 cmd)
 	
 	//g_pro_struct.tx_seq++;
 }
-static void ProConstructFrameTail(uint8 data[],uint16 tx_len)
+void ProConstructFrameTail(uint8 data[],uint16 tx_len)
 {//添加帧尾
 	data[tx_len] = XorCheck(data,tx_len);	//BCC异或校验
 }
@@ -1181,16 +1209,28 @@ void ProPacket(uint8 tx_data[],uint16 tx_len,uint8 tx_cmd,uint8 ack_flag)
 {
 	uint8 i,*p,tmp_data[TMP_BUFF_MAXLEN];
 	uint16 tmp_len;
-	#ifdef PRO_DEBUG
-		char str_ch[10];
-		uint8 str_len;
-	#endif
 
 	p = tmp_data;
 	
  	if(g_sysprivatepara_struct.link_center_flag != 1){//没有登录
+		goto RETURN_LAB;					// qlj 待删除
+	} 
+ 	if(sysm_on_off_struct.GPRSPacketTx_switch == SYSM_OFF){//不起用
 		goto RETURN_LAB;
 	} 
+	
+	if(ack_flag == 0)
+	{
+		g_gprs_data_struct.SendDataLen = tx_len;
+		memcpy(GPRStestdata, tx_data, g_gprs_data_struct.SendDataLen);
+		g_sysprivatepara_struct.updata_noacksend = 1;					
+//		g_gprs_data_struct.sendDataStatus = GPRS_SENDDATA_OUT;
+		
+		g_sysmiscrun_struct.upheart_count 			= 0;		///上行心跳计时清0
+		g_sysmiscrun_struct.PAckTim_count				= 0;		///平台超时计时
+
+		goto RETURN_LAB;
+	}
 	
 	ProConstructFrameHead(p,tx_len,tx_cmd);
 	p += PRO_DATA_INDEX;
@@ -1198,30 +1238,6 @@ void ProPacket(uint8 tx_data[],uint16 tx_len,uint8 tx_cmd,uint8 ack_flag)
 	tmp_len = PRO_DATA_INDEX + tx_len;
 	ProConstructFrameTail(tmp_data,tmp_len);
 	tmp_len += 1;		//加一个校验码
-	
-	if(ack_flag == 0)
-	{
-		if(g_sysprivatepara_struct.updata_sengding == 0){
-			#ifdef PRO_DEBUG
-				str_len = sprintf(str_ch,"%s ","上行：");
-				LocalDebug((uint8*)str_ch,str_len,LOCAL_PRO_DEBUG);	
-				for(i=0;i<tmp_len;i++){
-					str_len = sprintf(str_ch,"%02X ",tmp_data[i]);
-					LocalDebug((uint8*)str_ch,str_len,LOCAL_PRO_DEBUG);
-				}
-				LocalDebug("\r\n",2,LOCAL_PRO_DEBUG);
-			#endif
-			
-			g_gprs_data_struct.SendDataLen = tmp_len;
-			memcpy(GPRStestdata, tmp_data, g_gprs_data_struct.SendDataLen);
-			g_sysprivatepara_struct.updata_sengding = 1;				
-			g_gprs_data_struct.sendDataStatus = GPRS_SENDDATA_OUT;
-			
-			g_sysmiscrun_struct.upheart_count 			= 0;		///上行心跳计时清0
-			g_sysmiscrun_struct.PAckTim_count				= 0;		///平台超时计时
-		}
-		goto RETURN_LAB;
-	}
 	
 	for(i=0;i<PRO_MAX_TX_BUF_ARRAY;i++){
 		if(!g_pro_struct.tx_struct.re_tx_full_flag[i]){
@@ -1259,7 +1275,7 @@ LSNAL_LAB:
 	if(g_sysmiscrun_struct.have_sysAlarm_flag!=0 && g_sysmiscrun_struct.have_sysAlarm_flag!=3){
 		//报警或传报警盲区失败 需压片内flash
 		if(tx_cmd==PRO_UP_LSNAL_INFO_ID || tx_cmd==PRO_UP_REAL_INFO_ID){
-			printf("报警打包index = %d \r\n",g_provehice_union.Item.mileage);
+//			printf("报警打包index = %d \r\n",g_provehice_union.Item.mileage);
 			ProPutIntoAlarm(tx_data, tx_len, PRO_UP_LSNAL_INFO_ID);	
 		}
 	}
@@ -1278,28 +1294,22 @@ void ProPeriodTx(uint16 past_sec)
 		uint8 str_len;
 		uint16 j;
 	#endif
+	if(sysm_on_off_struct.GPRSPeriodTx_switch == SYSM_OFF){
+		return;
+	}
 	
 	for(i=0;i<PRO_MAX_TX_BUF_ARRAY;i++){										//轮询重发buff
 		if(g_pro_struct.tx_struct.re_tx_sec_counter[i] >= g_pro_struct.tx_struct.re_tx_time[i]){ //重发机制		
 			g_pro_struct.tx_struct.re_tx_sec_counter[i] = 0;
 			if(g_pro_struct.tx_struct.re_tx_full_flag[i]){			//有数据
 				if(g_pro_struct.tx_struct.re_tx_counter[i] < 3){  //重发小于3次		
-					if(g_sysprivatepara_struct.updata_sengding == 0){
+					if(g_sysprivatepara_struct.updata_sending == 0){
 						g_pro_struct.tx_struct.re_tx_counter[i]++;			
-						#ifdef PRO_DEBUG
-							str_len = sprintf(str_ch,"%s ","上行：");
-							LocalDebug((uint8*)str_ch,str_len,LOCAL_PRO_DEBUG);	
-							for(j=0;j<g_pro_struct.tx_struct.re_tx_len[i];j++){
-								str_len = sprintf(str_ch,"%02X ",g_pro_struct.tx_struct.re_tx_buf[i][j]);
-								LocalDebug((uint8*)str_ch,str_len,LOCAL_PRO_DEBUG);
-							}
-							LocalDebug("\r\n",2,LOCAL_PRO_DEBUG);
-						#endif
-						
+
 						if(g_gprs_data_struct.sendDataStatus == GPRS_SENDDATA_IDLE){
 							g_gprs_data_struct.SendDataLen = g_pro_struct.tx_struct.re_tx_len[i];
 							memcpy(GPRStestdata, g_pro_struct.tx_struct.re_tx_buf[i], g_gprs_data_struct.SendDataLen);
-							g_sysprivatepara_struct.updata_sengding = 1;				
+							g_sysprivatepara_struct.updata_sending = 1;				
 							g_gprs_data_struct.sendDataStatus = GPRS_SENDDATA_OUT;
 						}
 						g_sysmiscrun_struct.upheart_count 			= 0;		///上行心跳计时清0
@@ -1343,9 +1353,6 @@ void ProPeriodTx(uint16 past_sec)
 	if(g_sysprivatepara_struct.link_center_flag == 1){//已经连接到中心平台
 		if(g_pro_struct.try_login_statu == 1){
 			g_pro_struct.try_login_statu = 2;
-	//		MemCpy(udp_struct.udp_dst_ip,g_pro_struct.comm_para_ip,4);
-	//		MemCpy(udp_struct.udp_dst_port,g_pro_struct.comm_para_port,2);
-	//		UdpIpPortInit();
 			ProUpLogin();
 		}
 		else if(g_pro_struct.try_login_statu == 2){
@@ -1374,20 +1381,6 @@ void ProProcess(uint8 data[], uint16 len, uint16 colon)
 {
 	uint16 tmp_len;
 	
-	#ifdef PRO_DEBUG
-		uint8 str_len;
-		char str_ch[20];
-		uint16 i;
-
-		str_len = sprintf(str_ch,"%s ","下行：");
-		LocalDebug((uint8*)str_ch,str_len,LOCAL_PRO_DEBUG);	
-		for(i=0;i<len;i++){
-			str_len = sprintf(str_ch,"%02X ",data[i]);
-			LocalDebug((uint8*)str_ch,str_len,LOCAL_PRO_DEBUG);
-		}
-		LocalDebug("\r\n",2,LOCAL_PRO_DEBUG);
-	#endif
-
 	if(data[0]!='#' || data[1]!='#' ){				//起始符不对
 		goto RETURN_LAB2;
 	}
@@ -1400,11 +1393,15 @@ void ProProcess(uint8 data[], uint16 len, uint16 colon)
 	if(data[len-1] != XorCheck(data,len)){		//校验不对
 		goto RETURN_LAB2;
 	}
-	ReadOverTailIndex(colon+tmp_len);	//下标移动到本包结束
+	ReadOverTailIndex(colon+tmp_len);					//下标移动到本包结束
 	if(data[PRO_ACK_INDEX] != 0xFE){
 		ProDownAck(data,tmp_len);
 	}
 	else{
+		#ifdef PROTOCOL_DEBUG
+			printf("\r\nProProcess ProDown ID = %d\r\n",data[PRO_CMD_INDEX]);
+		#endif	
+	
 		switch(data[PRO_CMD_INDEX]){
 			case PRO_DOWN_INQUIRY_ID:{
 				ProDownParaQuiry(data,tmp_len);

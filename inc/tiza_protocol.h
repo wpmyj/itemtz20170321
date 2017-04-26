@@ -244,8 +244,8 @@
 		uint8 arry[3];
 		
 		struct{
-			uint8  serial;								//子系统号					1~250
 			uint16 btprobe_num;						//可充电温度探针个数1~65531					FFFE异常 FFFF无效
+			uint8  serial;								//子系统号					1~250
 		}Item;
 	}PRO_TBATTSYS_UNION;
 
@@ -416,12 +416,12 @@
 	
 	
 	#define LSNAL_PAGE_SIZE 					0x200				///暂定512，每段放8个,<<9
-	#define SYS_LSNAL_SPISTART_ADDR		0x00000000
-	#define SYS_LSNAL_SPIEND_ADDR			0X005FFFFF
 //	#define SYS_LSNAL_SPIMAXSECTOR		1536				///96*16  0~1535
 	#define SYS_LSNAL_SPIMAXINDEX			12288				///96*16*8
-	#define SYS_LSNAL_SPIOTHER_ADDR		0x00700000	///最后1M放其他
-	#define SYS_LSNAL_SPIINDEXSECTOR	1792				///页码下标保存起始段号
+	#define SYS_LSNAL_SPISTART_ADDR		SPIFLASH_LSNAL_START_ADD
+	#define SYS_LSNAL_SPIEND_ADDR			SPIFLASH_LSNAL_END_ADD
+	#define SYS_LSNAL_SPIINDEX_ADDR		SPIFLASH_LSNAL_ADD	///最后1M放其他
+	#define SYS_LSNAL_SPIINDEXSECTOR	SPIFLASH_LSNAL_SEC	///页码下标保存起始段号
 	typedef struct
 	{
 		uint8  data[LSNAL_PAGE_SIZE];		//一包盲区数据大小
@@ -443,7 +443,8 @@
 	{//注意初始化
 		uint8  vehicle_start_flag;			//汽车启动标志		1启动			0未启动
 		uint8  link_center_flag;				//连接平台标志		1已连接		0未连接
-		uint8  updata_sengding;					//数据上传标志		1正在上传 0空闲  
+		uint8  updata_sending;					//数据上传标志		1正在上传 0空闲  
+		uint8  updata_noacksend;				//上传不需要ACK数据		1需要上传 2正在发送 0空闲  
 	}SYS_PRIVATE_PARA_STRUCT;
 	PROTOCOL_EXTERN SYS_PRIVATE_PARA_STRUCT	g_sysprivatepara_struct;
 	PROTOCOL_EXTERN void ProWrite_VIN(uint8* str);
@@ -454,6 +455,8 @@
 	PROTOCOL_EXTERN void ProUpLogout(void);
 	PROTOCOL_EXTERN void ProUpHeartBeat(void);
 	PROTOCOL_EXTERN void ProUpCheckTime(void);
+	PROTOCOL_EXTERN void ProConstructFrameHead(uint8 data[],uint16 tx_len,uint8 cmd);
+	PROTOCOL_EXTERN void ProConstructFrameTail(uint8 data[],uint16 tx_len);
 	PROTOCOL_EXTERN void ProPacket(uint8 tx_data[],uint16 tx_len,uint8 tx_cmd,uint8 ack_flag);
 	PROTOCOL_EXTERN void ProPeriodTx(uint16 past_sec);
 	PROTOCOL_EXTERN void ProProcess(uint8 data[], uint16 len, uint16 colon);

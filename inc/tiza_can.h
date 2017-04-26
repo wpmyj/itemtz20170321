@@ -9,10 +9,23 @@
 		#define EXTN_CAN extern
 	#endif
 
+	///注意CAN滤波器变动  CANR01xx_Filter CANR02xx_Filter CANR_PeriodChargeFilter
+	#define CAN01MINODD 	 	0X01
+	#define CAN01MINEVEN   	0X02
+	#define CAN01MAX   			0X18
+	#define CAN02MINODD 	 	0X3D
+	#define CAN02MINEVEN   	0X3E
+	#define CAN02MAX   			0X3F
+		
 	#define CAN_R_0101 0x1801D1F3		//BMS单体电压	1~60
-	#define CAN_R_0160 0x1818D1F3		//1~24		// 0x183CD1F3		//BMS单体电压	1~60
+	#define CAN_R_0102 0x1802D1F3		//
+	#define CAN_R_0124 0x1818D1F3		//1~24				
+	#define CAN_R_0160 CAN_R_0124		// 			// 0x183CD1F3		//BMS单体电压	1~60
+		
 	#define CAN_R_0201 0x183DD1F3		//BMS 模块温	1~30
-	#define CAN_R_0230 0x183FD1F3		//1~3			// 0x185BD1F3		//BMS 模块温	1~30
+	#define CAN_R_0202 0x183ED1F3		//
+	#define CAN_R_0203 0x183FD1F3		//1~3
+	#define CAN_R_0230 CAN_R_0203		//			// 0x185BD1F3		//BMS 模块温	1~30
 	
 	#define CAN_R_03 0x18F8289E		//BMS单体电压极值数据帧
 	#define CAN_R_04 0x18F8299E		//BMS温度模块极值数据帧
@@ -201,16 +214,11 @@
 	}CAN_STRUCT;
 	
 	EXTN_CAN CAN_STRUCT can_struct;
-//	EXTN_CAN CAN_LOCK_STRUCT can_lock_struct;
+
 	
-//	void CanFilterInit(uint8 filter_index,uint32 can_id_1,uint32 can_id_2);
-//	void CanDeInit(void);
-//	void CanInit(void);
-//	void CanTxData(uint8 data[],uint32 id);
-//	void CanTx(void);
 	EXTN_CAN void CanRx(void);
 	EXTN_CAN void CanMonitor(uint16 past_sec);
-//	void CanMain(void);
+
 	
 #endif
 

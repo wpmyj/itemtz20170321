@@ -17,36 +17,13 @@ uint8 test_loginout_count =0;
 
 
 
-//-从信息流中提取出需要的数据
-//-例子:
-//-ftp://Vehicle:Vehicle#*@202.102.090.179:21/TIZA_XGDL_SBJ_V803_170306.bin
-static void TestFTPProcessFun(uint8 data[],uint16 tmp_len)
-{
-	uint8 mat_index, in_len, res;
-	uint8 tmp_data[256],exe_flag[3]={0,0,0};
-	uint32 ftpflshadd;
-	
-	mat_index = SubMatch((uint8*)"ftp://",StrLen((uint8*)"ftp://",0),data,tmp_len);
-	if(mat_index > 0){		
-		in_len = StrLen(data,0);
-		res = FtpAddrAnalysis(data,in_len-1);
-		if(res){
-			for(ftpflshadd=FTP_BLIND_FLASH_START; ftpflshadd < FTP_BLIND_FLASH_END;){
-				FlashErase(ftpflshadd);
-				ftpflshadd += 0x800;
-			}		
-			ftp_struct.ftp_upgrade_flag 						= 1;	
-			g_sysmiscrun_struct.ProgramUpgrade_flag = 1;
-		}		
-	}
-	
-}
-
 
 static void test_rs232_485(void)
 {
-	uint16 count,index;
+	uint16 count,index,j;
 	uint8  data[256];
+	uint8  dataip[4];
+	uint16 dataport;
 	#ifdef TEST_LOCALCMD
 	//uart1 本地串口
 	if(g_local_uart_struct.rx_head != g_local_uart_struct.rx_tail)
@@ -80,10 +57,41 @@ static void test_rs232_485(void)
 			SysReset();
 		}
 		else if(SubMatch((uint8*)"CMD UPGRADE",11,data,count))		{	//固件审计
-			count = StrLen((uint8*)FTP_LINK_EXAMP, 0);
-			memcpy(data, (uint8*)FTP_LINK_EXAMP, count);
-			TestFTPProcessFun(data, count);
+//			ftp_struct.ftp_upgrade_flag 						= 1;	
+			g_sysmiscrun_struct.ProgramUpgrade_flag = 1;
 		}
+		else if(SubMatch((uint8*)"CMD VERSION",11,data,count))		{	//版本号硬件加软件
+			printf("\r\n hardware version is:  ");
+			LocalUartFixedLenSend(g_propara_union.Item.g_para_HDVers,5);
+			printf("\r\n software version is:  ");
+			LocalUartFixedLenSend(g_propara_union.Item.g_para_SFVers,5);
+			printf("\r\n");
+		}
+		else if(SubMatch((uint8*)"CMD IPPORT",10,data,count)){// && data[count]=='#' && count>27)		{	//更改IP PORT
+			//CMD IPPORT192.168.001.002:21#
+			index = SubMatch((uint8*)"CMD IPPORT",10,data,count);
+			dataip[0]=(data[index]-0x30)*100 + (data[index+1]-0x30)*10 + (data[index+2]-0x30);
+			dataip[1]=(data[index+4]-0x30)*100 + (data[index+5]-0x30)*10 + (data[index+6]-0x30);
+			dataip[2]=(data[index+8]-0x30)*100 + (data[index+9]-0x30)*10 + (data[index+10]-0x30);
+			dataip[3]=(data[index+12]-0x30)*100 + (data[index+13]-0x30)*10 + (data[index+14]-0x30);
+			//i = SubMatch((uint8*)"**",1,data,count);
+			
+			dataport = 0;
+			for(j=index+16;j < count;j++){
+				if(data[j] == '*') break;
+				dataport *= 10;
+				dataport += data[j] - 0x30;
+			}
+			printf("\r\n ipport= %d.%d.%d.%d:%d",dataip[0],dataip[1],dataip[2],dataip[3],dataport);
+			
+			g_propara_union.Item.PDomain[0] = dataip[0];								//公共平台域名	
+			g_propara_union.Item.PDomain[1] = dataip[1];
+			g_propara_union.Item.PDomain[2] = dataip[2];
+			g_propara_union.Item.PDomain[3] = dataip[3];	
+			g_propara_union.Item.PPort			= dataport;//27055;//		//公共平台端口	
+			ProWrite_SysPara();
+		}
+		
 	}
 	#endif
 	#ifdef TEST_232_485
@@ -107,22 +115,13 @@ static void test_rs232_485(void)
 		g_rs485_uart_struct.rx_tail = (g_rs485_uart_struct.rx_tail + count)%RS485_UART_BUF_LEN;
 		RS485UartFixedLenSend(data,count);
 	}
-		#if 0
-//		printf("GPRS UART Received data: ");
-//		LocalUartFixedLenSend(data, count);
-//		printf(" \r\n");	
-		#endif	
 		
 	#endif	
 
 }
 
 void Test_task(void *pdata)
-{
-	uint8 times=0,i,j;
-	uint8 tmpdata[256];
-	uint16 addr;
-	
+{	
 	#ifdef TEST_232_485
 		UsartInit(METER_USART  ,METER_USART_BPR  ,USART_DATA_8B,USART_STOPBITS_1,USART_PARITY_NO);	
 		UsartInit(RS485_USART  ,RS485_USART_BPR  ,USART_DATA_8B,USART_STOPBITS_1,USART_PARITY_NO);
@@ -142,16 +141,13 @@ void Test_task(void *pdata)
 	#endif
 	
 	while(1){
-		OSTimeDlyHMSM(0, 0, 4, 0);
+		OSTimeDlyHMSM(0, 0, 1, 0);
 
-		test_rs232_485();
-		CanMonitor(2);
-		
+		test_rs232_485();		
 //	  printf("\r\n g_sysmiscrun_struct.NLogTim_count = %d g_pro_struct.try_login_statu = %d\r\n",g_sysmiscrun_struct.NLogTim_count,g_pro_struct.try_login_statu);
-//		printf(" g_sysalarm_struct.headindex = %d   g_sysalarm_struct.tailindex = %d\r\n",g_sysalarm_struct.headindex,g_sysalarm_struct.tailindex);
+		printf(" g_sysalarm_struct.headindex = %d   g_sysalarm_struct.tailindex = %d\r\n",g_sysalarm_struct.headindex,g_sysalarm_struct.tailindex);
 //		printf(" g_syslsnal_struct.headindex = %d   g_syslsnal_struct.tailindex = %d\r\n",g_syslsnal_struct.headindex,g_syslsnal_struct.tailindex);
-//		printf(" g_sysmiscrun_struct.have_sysAlarm_flag = %d \r\n",g_sysmiscrun_struct.have_sysAlarm_flag);
-//		printf(" can_struct.rx_data_flag = %d \r\n",can_struct.rx_data_flag);
+		printf(" g_sysmiscrun_struct.have_sysAlarm_flag = %d \r\n",g_sysmiscrun_struct.have_sysAlarm_flag);
 //		printf("\r\n PWR_C = %d BAT_ADC = %d\r\n",adc_result[0],adc_result[1]);
 
 		
@@ -194,3 +190,4 @@ void Test_task(void *pdata)
 		
 	}
 }
+

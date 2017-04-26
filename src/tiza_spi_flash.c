@@ -34,7 +34,7 @@ static void SpiFlashWriteSR(uint8 sr);  		//写状态寄存器
 
 #define SPI_FLASH_CAPCITY	(8*1024*1024)
 
-static void delay_ms(uint16 time)
+static void spidelay_ms(uint16 time)
 { 
   uint32 tmp;// = time * 21;
   while(time--)
@@ -335,10 +335,10 @@ uint8 ExteFlashEraseSector(uint16 SectorNum)
  	printf("spi flash sector: 0x%X\r\n",SectorNum);	  
 	#endif
 
-	if(SectorNum * FLASH_SECTOR_SIZE > SPI_FLASH_CAPCITY)
+	if(SectorNum * SPIFLASH_SECTOR_SIZE > SPI_FLASH_CAPCITY)
 		return 0;
 	
-	Dst_Addr = SectorNum * FLASH_SECTOR_SIZE;			// 4096 bytes per page
+	Dst_Addr = SectorNum * SPIFLASH_SECTOR_SIZE;			// 4096 bytes per page
 
 	SpiFlashWriteEnable();                  //SET WEL 	 
 	SpiFlashWaitBusy();   
@@ -365,7 +365,7 @@ uint8 ExteFlashPowerDown(void)
   	SPI_CS_ENABLE;                            //使能器件   
     SPI1_ReadWriteByte(W25X_PowerDown);        //发送掉电命令  
 	SPI_CS_DISABLE;                            //取消片选     	      
-    delay_ms(1);                               //等待TPD  
+    spidelay_ms(1);                               //等待TPD  
 
 	return 1;
 }   
@@ -376,7 +376,7 @@ uint8 ExteFlashWakeUp(void)
 	SPI_CS_ENABLE;                            //使能器件   
 	SPI1_ReadWriteByte(W25X_ReleasePowerDown);   //  send W25X_PowerDown command 0xAB    
 	SPI_CS_DISABLE;                            //取消片选     	      
-	delay_ms(1);                               //等待TRES1
+	spidelay_ms(1);                               //等待TRES1
 
 	return 1;
 }   

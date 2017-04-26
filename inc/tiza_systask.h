@@ -10,13 +10,13 @@
 	#endif
 
 	
-	#define SYS_ALARM_MAXINDEX						48
-	#define ALARM_PAGE_SIZE 							0x200						//512byte
-	#define SYS_ALARM_START_ADDR				0x20000	//0x08020000			//64PAGE
-	#define SYS_ALARM_END_ADDR					0x267FF	//0X080263FF
-	#define SYS_ALARM_INDEXPAGE					0x26800	//0X08026800			//77PAGE
-	#define SYS_SAVEPARA_INDEXPAGE			0x27000	//0X08027000			//78PAGE
-	#define SYS_SAVEVIN_INDEXPAGE				0x27800	//0X08027800			//79PAGE   
+	#define SYS_ALARM_MAXINDEX					80
+	#define ALARM_PAGE_SIZE 						0x200						//512byte		
+	#define SYS_ALARM_START_ADDR				FLASH_ALARM_START_ADDR	
+	#define SYS_ALARM_END_ADDR					FLASH_ALARM_END_ADDR		//与SYS_ALARM_MAXINDEX对应
+	#define SYS_ALARM_INDEXPAGE					FLASH_ALARM_INDEXPAGE		
+	#define SYS_SAVEPARA_INDEXPAGE			FLASH_SAVEPARA_INDEXPAGE	
+	#define SYS_SAVEVIN_INDEXPAGE				FLASH_SAVEVIN_INDEXPAGE
 	
 	#define SYS_SAVEALARM_NUMB					3				//系统未出现报警时 保留INTFLAH的记录条数  
 	#define SYS_HAVEALARM_COUNT					40			//出现报警最大倒计时时间 s
@@ -49,7 +49,7 @@
 		uint8  main_power_statu;						///主电源状态     01上电1次  02断电  03再上电
 		uint8  assist_gps_flag;							///辅助定位标志		02初始     00之前定位有效   01之前定位无效
 		
-		uint8  ProgramUpgrade_flag;					///固件升级标志		00初始		 01执行固件下载   02写BOOT标志  03
+		uint8  ProgramUpgrade_flag;					///固件升级标志		00初始		 01有要更新升级    02执行固件下载   03写BOOT标志  04
 	}SYS_MISC_RUN_STRUCT;///系统运行参数
 
 	

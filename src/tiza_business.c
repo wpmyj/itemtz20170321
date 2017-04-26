@@ -16,7 +16,8 @@ void BGprsResetPara(void)
 	SetGPRSNetPara();
 //	g_propostion_union.Item.status.byte  		= 0x01;
 	g_gps_struct.gpsinform.subitem.statu.byte = 0x01;									///初始化定位无效标志
-	g_sysprivatepara_struct.updata_sengding = 0;
+	g_sysprivatepara_struct.updata_sending = 0;
+	g_sysprivatepara_struct.updata_noacksend = 0;
 	g_pro_struct.try_login_statu  		= 0;
 	g_pro_struct.login_center_flag  	= FALSE;
 	g_sysmiscrun_struct.NLogTim_count = 0xFFFF;		///三次登录失败后重新登录时间间隔	
@@ -163,13 +164,15 @@ void BusiResetModule(void)
 ******************************************************/
 void ExecuteModuleTask(void)
 {
+	uint32 ftpflshadd;
+	
 		if(g_business_struct.usemodule == _NO){
 			return;
 		}
 		///模块调度函数
 		ModlueCalledProcess();
 			
-		if(g_sysmiscrun_struct.ProgramUpgrade_flag != 0){	
+		if(g_sysmiscrun_struct.ProgramUpgrade_flag > 1){ // 0 1
 //		printf("正在升级,不执行上传数据\n");
 			return ;
 		}
@@ -205,8 +208,32 @@ void ExecuteModuleTask(void)
 					if(g_pro_struct.try_login_statu == 0){		//置登录标志，只一次
 						g_pro_struct.try_login_statu = 1;
 					}
+					
+					if(g_sysprivatepara_struct.updata_noacksend == 1){//上传ACK（上发不需要应答的报文）
+						g_sysprivatepara_struct.updata_noacksend = 2;
+						g_gprs_ctr_struct.business = GPRS_NULL;
+						g_gprs_data_struct.sendDataStatus = GPRS_SENDDATA_OUT;
+						break;
+					}
+					else if(g_sysprivatepara_struct.updata_noacksend == 2){
+						g_gprs_ctr_struct.business = GPRS_NULL;
+						g_sysprivatepara_struct.updata_sending = 0;		
+						g_sysprivatepara_struct.updata_noacksend = 0;
+						break;
+					}
+					if(g_sysmiscrun_struct.ProgramUpgrade_flag == 1){//更新升级
+						ftp_struct.ftp_upgrade_flag 						= 1;	
+						g_sysmiscrun_struct.ProgramUpgrade_flag = 2;
+						for(ftpflshadd=FlASH_STORE_START_ADD; ftpflshadd < FLASH_STORE_END_ADD;){
+							OSTimeDlyHMSM(0, 0, 0, 20);
+							FlashErase(ftpflshadd);
+							ftpflshadd += 0x800;
+						}	
+						break;
+					}
+				
 					g_gprs_ctr_struct.business = GPRS_NULL;
-					g_sysprivatepara_struct.updata_sengding = 0;
+					g_sysprivatepara_struct.updata_sending = 0;				
 					break;
 				}
 				case GPRS_SENDDATA_OUT:{//有数据要发送
@@ -239,33 +266,13 @@ void ExecuteModuleTask(void)
 //L218任务
 ******************************************************/
 void L218_task(void *pdata)
-{	 
-	uint8 i =0;
-	
+{	 	
 	L218PowerInit();	
 	BGprsResetPara();
 	#ifdef L218_DEBUG
 	printf("\r\n##### L218 POWER OK #####\r\n");	
 	#endif	
 	
-/* 	GPRStestdata[i++] = 0x26;
-	GPRStestdata[i++] = 0x50;
-	GPRStestdata[i++] = 0x05;
-	GPRStestdata[i++] = 0x18;
-	GPRStestdata[i++] = 0x60;
-	GPRStestdata[i++] = 0x44;//0x49;
-	GPRStestdata[i++] = 0xaa;
-	GPRStestdata[i++] = 0x00;
-	GPRStestdata[i++] = 0x16;
-	GPRStestdata[31]  = 0x62;*/
-	
-//	g_gprs_data_struct.SendDataLen=32;//8;
-//  g_gprs_data_struct.SendData=(uint8 *)GPRStestdata;
-//	g_gprs_data_struct.IP[0] = 218;
-//	g_gprs_data_struct.IP[1] = 94;
-//	g_gprs_data_struct.IP[2] = 153;
-//	g_gprs_data_struct.IP[3] = 146;
-//	g_gprs_data_struct.Port = 20002;//9903;//27055;//
 
 /////IP：220.169.30.122 端口：9876
 //	g_gprs_data_struct.IP[0] = 220;
@@ -274,20 +281,19 @@ void L218_task(void *pdata)
 //	g_gprs_data_struct.IP[3] = 122;
 //	g_gprs_data_struct.Port = 9876;//9903;//27055;//
 
-	g_provehice_union.Item.mileage = 0;					// qlj 暂作报文序号用  后面删除
 	g_propara_union.Item.SavePeri	 = 10000;	//10000ms
-	g_propara_union.Item.PDomain[0] = 218;								//公共平台域名	
-	g_propara_union.Item.PDomain[1] = 94;
-	g_propara_union.Item.PDomain[2] = 153;
-	g_propara_union.Item.PDomain[3] = 146;	
-	g_propara_union.Item.PPort			= 20002;//27055;//20000;//	9903;//	//公共平台端口		
+//	g_propara_union.Item.PDomain[0] = 218;								//公共平台域名	
+//	g_propara_union.Item.PDomain[1] = 94;
+//	g_propara_union.Item.PDomain[2] = 153;
+//	g_propara_union.Item.PDomain[3] = 146;	
+//	g_propara_union.Item.PPort			= 20002;//27055;//20000;//9903;//		//公共平台端口		
 	SetGPRSNetPara();
 	ProParaInit();
 	
 	while(1)
 	{
 		if(g_sysmiscrun_struct.have_sysAlarm_flag==1 || g_sysmiscrun_struct.have_sysAlarm_flag==2){
-			OSTimeDlyHMSM(0, 0, 0, 500);
+			OSTimeDlyHMSM(0, 0, 0, 200);
 		}
 		else{
 			OSTimeDlyHMSM(0, 0, 2, 0);
@@ -297,122 +303,5 @@ void L218_task(void *pdata)
 		ExecuteModuleTask();
 	}
 }
-
-
-//////////////////////测试使用///////////////////////////////////////////
-void GPRStestfun(void)
-{
-	uint32 tmp;
-	uint8  h,l;
-	union08 byte;
-	
-	if(++GPRStestcount > 999999){
-		GPRStestcount = 0;
-	}
-	tmp = GPRStestcount;
-	l = tmp % 10;
-	tmp =tmp / 10;
-	h = tmp % 10;
-	tmp =tmp / 10;
-	GPRStestdata[11] = (h<<4) | l;
-	l = tmp % 10;
-	tmp =tmp / 10;
-	h = tmp % 10;
-	tmp =tmp / 10;
-	GPRStestdata[10] = (h<<4) | l;
-	l = tmp % 10;
-	tmp =tmp / 10;
-	h = tmp % 10;
-	tmp =tmp / 10;
-	GPRStestdata[9] = (h<<4) | l;
-	
-//	MemCpy(&GPRStestdata[12],g_gps_struct.gpsinform.array,19);
-	GPRStestdata[12] = 0XFA;
-	GPRStestdata[13] = 0XFB;
-	GPRStestdata[14] = 0XFC;
-	GPRStestdata[15] = 0XFD;
-	tmp = g_gps_struct.gpsinform.subitem.latitude;
-	byte.half.H = tmp / 10000000;
-	tmp 				= tmp % 10000000;
-	byte.half.L = tmp / 1000000;
-	tmp         = tmp % 1000000;	
-	GPRStestdata[16] = byte.byte;
-	byte.half.H = tmp / 100000;
-	tmp 				= tmp % 100000;
-	byte.half.L = tmp / 10000;
-	tmp         = tmp % 10000;	
-	GPRStestdata[17] = byte.byte;
-	byte.half.H = tmp / 1000;
-	tmp 				= tmp % 1000;
-	byte.half.L = tmp / 100;
-	tmp         = tmp % 100;	
-	GPRStestdata[18] = byte.byte;
-	byte.half.H = tmp / 10;
-	byte.half.L = tmp % 10;
-	GPRStestdata[19] = byte.byte;
-	
-	GPRStestdata[20] = 0XFA;
-	GPRStestdata[21] = 0XFB;
-	GPRStestdata[22] = 0XFC;
-	GPRStestdata[23] = 0XFD;
-	tmp = g_gps_struct.gpsinform.subitem.longitude;
-	byte.half.H = tmp / 100000000;
-	tmp 				= tmp % 100000000;
-	byte.half.L = tmp / 10000000;
-	tmp         = tmp % 10000000;	
-	GPRStestdata[24] = byte.byte;
-	byte.half.H = tmp / 1000000;
-	tmp 				= tmp % 1000000;
-	byte.half.L = tmp / 100000;
-	tmp         = tmp % 100000;	
-	GPRStestdata[25] = byte.byte;
-	byte.half.H = tmp / 10000;
-	tmp 				= tmp % 10000;
-	byte.half.L = tmp / 1000;
-	tmp         = tmp % 1000;	
-	GPRStestdata[26] = byte.byte;
-	byte.half.H = tmp / 100;
-	tmp 				= tmp % 100;
-	byte.half.L = tmp / 10;
-	GPRStestdata[27] = byte.byte;
-	
-	GPRStestdata[28] = 0XFE;
-	GPRStestdata[29] = 0XFF;
-	GPRStestdata[30] = g_gps_struct.gpsinform.subitem.statu.byte;
-
-}
-#if 0
-uint8 PTMK_CHECKSUM_fun(void)
-{//计算PTMK校验用
-	uint8 ptmk_str[] = {"PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0"};
-	uint8 checksum=0,len,i;
-	
-	len = StrLen((const uint8 *)ptmk_str,0);
-	for(i=0;i<len;i++){
-		checksum ^= ptmk_str[i]; 
-	}  
- 
-	printf("\r\nPTMK CHECK SUM IS:%.2X \r\n",checksum);
-	return checksum;
-}
-#endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 

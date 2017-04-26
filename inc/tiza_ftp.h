@@ -9,8 +9,6 @@
 		#define EXTERN_FTP_GLOBAL extern
 	#endif
 		
-	#define FTP_BLIND_FLASH_START 	0x08020000
-	#define FTP_BLIND_FLASH_END 		0x08040000 
 
 
 			typedef enum 
@@ -137,10 +135,11 @@
 		uint32 program_total_size;///字节总数
 		uint32 sys_para_init_flag;///参数重新初始化标志
 		
-		uint8 total_packet_num;///总包数
-		uint8 cur_rx_packet_index;///当前接收包序号
+		uint8 total_packet_num;				///总包数
+		uint8 cur_rx_packet_index;		///当前接收包序号
 		uint32 boot_ms_delay_counter;///boot 毫秒延时
 		uint32 sys_tick_ms_counter;	 ///毫秒计数
+		
 	}SYS_BOOT_PARA_STRUCT;///系统启动参数
 
 	EXTERN_FTP_GLOBAL SYS_BOOT_PARA_STRUCT boot_struct;

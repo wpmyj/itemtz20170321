@@ -17,12 +17,12 @@
 const uint8 AT[] 					= {"AT\x0d"};								///AT命令
 const uint8 AT_E0[] 			= {"ATE0\x0d"};							///关闭回显
 const uint8 AT_IPR[] 			= {"AT+IPR=115200\x0d"};	///设置波特率为115200
-const uint8 AT_CIMI[] 		= {"AT+CIMI\x0d\x0a"};			///读取SIM卡IMSI
+const uint8 AT_CIMI[] 		= {"AT+CIMI\x0d"};			///读取SIM卡IMSI
 //const uint8 AT_CIMI[] 		= {"AT+CGMR;+ISLKVRSCAN\x0d\x0a"};			///读取SIM卡IMSI
 const uint8 AT_CNUM[] 		= {"AT+CNUM\x0d"};					///查询本机号码
 const uint8 AT_CPBS_ON[] 	= {"AT+CPBS=\"ON\"\x0d"};		///设置本机号使能 
 const uint8 AT_CPBW[] 		= {"AT+CPBW=1,"};						///写入本机号 +号码,类型,内容
-const uint8 AT_IMEI[] 		= {"AT+EGMR=0,7\x0d\x0a"};	///查询GSM模块的IMEI
+const uint8 AT_IMEI[] 		= {"AT+EGMR=0,7\x0d"};	///查询GSM模块的IMEI
 const uint8 AT_CSQ[] 			= {"AT+CSQ\x0d"};						///查询信号强度
 const uint8 AT_CREG[] 		= {"AT+CREG?\x0d"};					///查询注册情况
 const uint8 AT_CGATT[] 		= {"AT+CGATT?\x0d"};				///GPRS附着情况
@@ -41,27 +41,27 @@ const uint8 AT_NULL[]			= {""};											///空,等待接收
 
 // 网络服务命令
 //单连接 定长发送
-const uint8 AT_CIPMUX[] 			= {"AT+CIPMUX=0\x0d\x0a"};           								///单连接模式
-const uint8 AT_CSTT[] 				= {"AT+CSTT=\"CMNET\"\x0d\x0a"};           						///设置网络
-const uint8 AT_NETOPEN[] 			= {"AT+CIICR\x0d\x0a"};                           		///打开网络
-const uint8 AT_NETCLOSE[] 		= {"AT+CIPSHUT\x0d\x0a"};                         		///关闭网络
-const uint8 AT_CIFSR[] 				= {"AT+CIFSR\x0d\x0a"};           										///获取本地IP
-//			uint8 AT_CIPOPEN_TCP[] 	= {"AT+CIPSTART=\"UDP\",\"%s\",\"%s\"\x0d\x0a"};   		///打开UDP链接
-//			uint8 AT_CIPOPEN_TCP[] 	= {"AT+CIPSTART=\"TCP\",\"%s\",\"%s\"\x0d\x0a"};   		///打开TCP链接
-			uint8 AT_CIPOPEN_TCP[] 	= {"AT+CIPSTART=\"TCP\",\"%u.%u.%u.%u\",\"%u\"\x0d\x0a"};   		///打开TCP链接
-			uint8 AT_CIPSEND_TCP[] 	= {"AT+CIPSEND=%u\x0d\x0a"};           								///发送TCP数据
-const	uint8 AT_CIPCLOSE[] 		= {"AT+CIPCLOSE\x0d\x0a"};               	   					///关闭链接
-const	uint8 AT_CIPRXGET[] 		= {"AT+CIPRXGET=0\x0d\x0a"};               	   				///自动接收TCP数据
-const	uint8 AT_CIPSRIP[] 			= {"AT+CIPSRIP=1\x0d\x0a"};               	   				///接收数据前含IP地址
+const uint8 AT_CIPMUX[] 			= {"AT+CIPMUX=0\x0d"};           											///单连接模式
+const uint8 AT_CSTT[] 				= {"AT+CSTT=\"CMNET\"\x0d"};           								///设置网络
+const uint8 AT_NETOPEN[] 			= {"AT+CIICR\x0d"};                           				///打开网络
+const uint8 AT_NETCLOSE[] 		= {"AT+CIPSHUT\x0d"};                         				///关闭网络
+const uint8 AT_CIFSR[] 				= {"AT+CIFSR\x0d"};           												///获取本地IP
+//			uint8 AT_CIPOPEN_TCP[] 	= {"AT+CIPSTART=\"UDP\",\"%s\",\"%s\"\x0d"};   		///打开UDP链接
+//			uint8 AT_CIPOPEN_TCP[] 	= {"AT+CIPSTART=\"TCP\",\"%s\",\"%s\"\x0d"};   		///打开TCP链接
+			uint8 AT_CIPOPEN_TCP[] 	= {"AT+CIPSTART=\"TCP\",\"%u.%u.%u.%u\",\"%u\"\x0d"};   		///打开TCP链接
+			uint8 AT_CIPSEND_TCP[] 	= {"AT+CIPSEND=%u\x0d"};           										///发送TCP数据
+const	uint8 AT_CIPCLOSE[] 		= {"AT+CIPCLOSE\x0d"};               	   							///关闭链接
+const	uint8 AT_CIPRXGET[] 		= {"AT+CIPRXGET=0\x0d"};               	   						///自动接收TCP数据
+const	uint8 AT_CIPSRIP[] 			= {"AT+CIPSRIP=1\x0d"};               	   						///接收数据前含IP地址
 // GPS											///开启GPS后设置GPS模块波特率
-const uint8 AT_GETGPS[]				={"AT+GETGPS=1\x0d\x0a"};															///关闭从GSM串口打印GPS信息																///关闭从GSM串口打印GPS信息
-const uint8 AT_EGDCONT2[]			={"AT+EGDCONT=2,\"IP\",\"CMNET\"\x0d\x0a"};						///设置 PDP2场景			AGPS
-const uint8 AT_EGDCONT1[]			={"AT+EGDCONT=1,\"IP\",\"CMNET\"\x0d\x0a"};						///设置 PDP1场景			AGPS
-const uint8 AT_MGPSTS[]				={"AT+MGPSTS%s\x0d\x0a"};															///允许网络时间同步		AGPS	
-const uint8 AT_MGPSEPO[]			={"AT+MGPSEPO%s\x0d\x0a"};														///允许EPO文件下载和辅助		AGPS	
-			uint8 AT_EGPSC[]				={"AT+EGPSC%s\x0d\x0a"};															///1/0  开启/关闭GPS模块
-const	uint8 AT_PMTK314[] 			={"AT+EGPSS=\"PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28\"\x0d\x0a"}; ///过滤GPS{"AT\x0d"};	//
-const	uint8 AT_PMTK386[] 			={"AT+EGPSS=\"PMTK386,0.4*19\"\x0d\x0a"}; 						///设置静态导航速度阈值 0.4m/s
+const uint8 AT_GETGPS[]				={"AT+GETGPS=1\x0d"};																	///关闭从GSM串口打印GPS信息																///关闭从GSM串口打印GPS信息
+const uint8 AT_EGDCONT2[]			={"AT+EGDCONT=2,\"IP\",\"CMNET\"\x0d"};								///设置 PDP2场景			AGPS
+const uint8 AT_EGDCONT1[]			={"AT+EGDCONT=1,\"IP\",\"CMNET\"\x0d"};								///设置 PDP1场景			AGPS
+const uint8 AT_MGPSTS[]				={"AT+MGPSTS%s\x0d"};																	///允许网络时间同步		AGPS	
+const uint8 AT_MGPSEPO[]			={"AT+MGPSEPO%s\x0d"};																///允许EPO文件下载和辅助		AGPS	
+			uint8 AT_EGPSC[]				={"AT+EGPSC%s\x0d"};																	///1/0  开启/关闭GPS模块
+const	uint8 AT_PMTK314[] 			={"AT+EGPSS=\"PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28\"\x0d"}; ///过滤GPS{"AT\x0d"};	//
+const	uint8 AT_PMTK386[] 			={"AT+EGPSS=\"PMTK386,0.4*19\"\x0d"}; 								///设置静态导航速度阈值 0.4m/s
 //const	uint8 AT_PMTK314[] 		= {"AT\x0d"};	//
 
 //FTP
@@ -71,17 +71,21 @@ const uint8 FTP_TYPEOFINTERCONNECT[] 	= {"3,1,\"CONTYPE\",\"GPRS\"\x0d"};
 const uint8 FTP_SETAPN[] 							= {"3,1,\"APN\",\"CMNET\"\x0d"};
 const uint8 FTP_OPENBEARER[] 					= {"1,1\x0d"};
 const uint8 AT_FTPTYPE[]							= {"AT+FTPTYPE=\"I\"\x0d"};										///-Set the type of data:“A” for FTP ASCII sessions,“I” for FTP Binary sessions
-const uint8 AT_FTPSERV[] 							= {"AT+FTPSERV=\"202.102.090.179\"\x0d"};			///IP
-const uint8 AT_FTPPORT[]        			= {"AT+FTPPORT=21\x0d"};											///服务器端口
-const uint8 AT_FTPUN[] 								= {"AT+FTPUN=\"Vehicle\"\x0d"};								///USER
-const uint8 AT_FTPPW[] 								= {"AT+FTPPW=\"Vehicle#*\"\x0d"};							///PASSWORD
-const uint8 AT_FTPGETNAME[] 					= {"AT+FTPGETNAME=\"TIZA_FTP.bin\"\x0d"};			///-Set the file name in FTP server
-//-const uint8 AT_FTPGETNAME[] 	= {"AT+FTPGETNAME=\"TIZA_FTP_test.bin\"\x0d"};
-//-const uint8 AT_FTPGETNAME[] 	= {"AT+FTPGETNAME=\"TIZA_XGDL_SBJ_V803_170306.bin\"\x0d"};	//-Set the file name in FTP server
-const uint8 AT_FTPGETPATH[] 					= {"AT+FTPGETPATH=\"/\"\x0d"};								///-Set the path of file
+//const uint8 AT_FTPSERV[] 							= {"AT+FTPSERV=\"202.102.090.179\"\x0d"};			///IP
+//const uint8 AT_FTPPORT[]        			= {"AT+FTPPORT=21\x0d"};											///服务器端口
+//const uint8 AT_FTPUN[] 								= {"AT+FTPUN=\"Vehicle\"\x0d"};								///USER
+//const uint8 AT_FTPPW[] 								= {"AT+FTPPW=\"Vehicle#*\"\x0d"};							///PASSWORD
+//const uint8 AT_FTPGETNAME[] 					= {"AT+FTPGETNAME=\"TIZA_FTP.bin\"\x0d"};			///-Set the file name in FTP server
+//const uint8 AT_FTPGETPATH[] 					= {"AT+FTPGETPATH=\"/\"\x0d"};								///-Set the path of file
+const uint8 AT_FTPSERV[] 							= {"AT+FTPSERV=\"%u.%u.%u.%u\"\x0d"};			///IP
+const uint8 AT_FTPPORT[]        			= {"AT+FTPPORT=%u\x0d"};											///服务器端口
+const uint8 AT_FTPUN[] 								= {"AT+FTPUN=\"%s\"\x0d"};								///USER
+const uint8 AT_FTPPW[] 								= {"AT+FTPPW=\"%s\"\x0d"};							///PASSWORD
+const uint8 AT_FTPGETNAME[] 					= {"AT+FTPGETNAME=\"%s\"\x0d"};			///-Set the file name in FTP server
+const uint8 AT_FTPGETPATH[] 					= {"AT+FTPGETPATH=\"%s\"\x0d"};								///-Set the path of file
+
 const uint8 AT_FTPGET1[] 							= {"AT+FTPGET=1\x0d"};												///-
 const uint8 AT_FTPGET2[] 							= {"AT+FTPGET="};															///-
-
 const uint8 AT_FTPQUIT[] 							= {"AT+FTPQUIT\x0d"};													///-Quit FTP connection
 const uint8 AT_FTPSIZE[] 							= {"AT+FTPSIZE\x0d"};													///-Get the size of file.
 
@@ -97,10 +101,9 @@ const uint8 CIPSEND_EXTRA_OK[] 	= "SEND OK";			// SEND SUCCESS
 const uint8 CIPCLOSE_EXTRA_OK[] = "CLOSE OK";			// IP IS CLOSED SUCCESS
 const uint8 GPRS_HAVE_RX_DATA[] = "+RECEIVE,";		// 有接收数据
 const uint8 CONST_DATA_1[] = "1\x0d";							// 有接收数据
-const uint8 FTPGET_OK_ACK[] = "+FTPGET:1,1";			// Open FTP session SUCCESS
-const uint8 FTPGET_FINISH_ACK[] = "+FTPGET: 1,0";	// means finish read DATA
+//const uint8 FTPGET_OK_ACK[] = "+FTPGET:1,1";			// Open FTP session SUCCESS
+//const uint8 FTPGET_FINISH_ACK[] = "+FTPGET: 1,0";	// means finish read DATA
 
-//一下数值定义到AtFTPGET2Fun中的局部变量
 uint8  TEMPF_DATA_FROM_FTP[4096];
 uint16 FLASH_DATA_PT = 0;
 
@@ -161,7 +164,7 @@ AT_CMD_STRUCT g_at_cmd_struct[] =
 		{(uint8 *)AT_FTPGETNAME,    	3,	 1*SEND_1T,	EXE_NO,	AtFTPGETNAMEFun},
 		{(uint8 *)AT_FTPGETPATH,    	3,	 1*SEND_1T,	EXE_NO,	AtFTPGETPATHFun},
 		{(uint8 *)AT_FTPGET1,    	  100,	 1*SEND_1T,	EXE_NO,	AtFTPGET1Fun},
-		{(uint8 *)AT_FTPGET2,    	  100,	10*SEND_1T, EXE_NO,	AtFTPGET2Fun},
+		{(uint8 *)AT_FTPGET2,    	  150,	 1*SEND_1T, EXE_NO,	AtFTPGET2Fun},
 		{(uint8 *)AT_FTPQUIT,    	    3,	 1*SEND_1T,	EXE_NO,	AtFTPQUITFun},
 		{(uint8 *)AT_FTPSIZE,    	  100,	 1*SEND_1T,	EXE_NO,	AtFTPSIZEFun},
 
@@ -851,14 +854,27 @@ void AtFTPGET1Fun(uint8 *data,uint16 len,uint8 flag)
 
 void AtFTPGET2Fun(uint8 *data,uint16 len,uint8 flag)
 {	
-  uint8  i = 0,j = 0,cmp_data[] = {"+FTPGET: 2,"};//,cmp_data3[] = {"+FTPGET:1,1"};
+  uint8  i = 0,j = 0,cmp_data[20];// = {"+FTPGET: 2,"},cmp_data3[20] = {"+FTPGET:1,1"};
 	uint8  ack_flag = FALSE,rrx_data[L218_MAX_BUF_LEN];
 	uint16 flash_len = 0,mat_index = 0,rx_len = 0,source_head = 0,end_head = 0,time;
-
+	
+	cmp_data[i++] = '+';
+	cmp_data[i++] = 'F';
+	cmp_data[i++] = 'T';
+	cmp_data[i++] = 'P';
+	cmp_data[i++] = 'G';
+	cmp_data[i++] = 'E';
+	cmp_data[i++] = 'T';
+	cmp_data[i++] = ':';
+	cmp_data[i++] = ' ';	//8
+	cmp_data[i++] = '2';
+	cmp_data[i++] = ',';
+	cmp_data[i++] = 0;
+	i = 0;
 	
 	g_at_cmd_struct[AT_FTPGET2_INDEX].exe_flag = EXE_FAIL;
 
-	mat_index = SubMatch(cmp_data,StrLen(cmp_data,0),data,len);	//-获取字节长度数据,而且必须有复杂错误
+	mat_index = SubMatch(cmp_data, 11, data, len);	//-获取字节长度数据,而且必须有复杂错误
 	if(mat_index > 0)
 	{
 		while((data[mat_index + i] >= 0x30)&&(data[mat_index + i] <= 0x39))
@@ -869,7 +885,9 @@ void AtFTPGET2Fun(uint8 *data,uint16 len,uint8 flag)
 			flash_len += (data[mat_index + j] - 0x30);
 			j++;
 		}
-		source_head = mat_index + i + +2;	//-指向内容开始的地方
+		if(flash_len == 0) 
+			goto COMPARA_LAB;
+		source_head = mat_index + i + 2;	//-指向内容开始的地方
 		end_head = source_head + flash_len + 2 + 6;	//-指向了+FTPGET:1,的开始位置
 		if((end_head > L218_MAX_BUF_LEN) || (flash_len > 1024))
 		{
@@ -900,7 +918,7 @@ void AtFTPGET2Fun(uint8 *data,uint16 len,uint8 flag)
 		MemCpy(TEMPF_DATA_FROM_FTP + ftp_struct.ftp_rx_len,data + source_head,flash_len);
 		ftp_struct.ftp_rx_file_byte_counter += flash_len;
 		ftp_struct.ftp_rx_len += flash_len;
-boot_struct.program_total_size = 37196;
+
 printf("\r\n boot_struct.program_total_size = %d ftp_struct.ftp_rx_file_byte_counter = %d ftp_struct.ftp_rx_len = %d\r\n",boot_struct.program_total_size,ftp_struct.ftp_rx_file_byte_counter,ftp_struct.ftp_rx_len);
 		if(ftp_struct.ftp_rx_len >= 2048)
 		{
@@ -912,12 +930,14 @@ printf("\r\n boot_struct.program_total_size = %d ftp_struct.ftp_rx_file_byte_cou
 
 		if(ftp_struct.ftp_rx_file_byte_counter == boot_struct.program_total_size)	//-判断是继续还是结束
 		{//-考虑增加结束符判断
-			g_at_cmd_struct[AT_FTPGET2_INDEX].exe_flag = EXE_OK;
-			if(ftp_struct.ftp_rx_len)
-			{
-				CpuFlashWrite(FTP_BLIND_FLASH_START+(ftp_struct.ftp_rx_file_byte_counter / 2048) * 2048,TEMPF_DATA_FROM_FTP, ftp_struct.ftp_rx_len);
-				ftp_struct.ftp_rx_len = 0;
-				ftp_struct.ftp_rx_file_byte_counter = 0;
+			cmp_data[8] = ' ';cmp_data[9] = '1';cmp_data[10] = ',';cmp_data[11] = '0';cmp_data[12] = 0;
+			if(SubMatch(cmp_data, 12, data + end_head, len - end_head) > 0){
+				g_at_cmd_struct[AT_FTPGET2_INDEX].exe_flag = EXE_OK;
+				if(ftp_struct.ftp_rx_len){
+					CpuFlashWrite(FTP_BLIND_FLASH_START+(ftp_struct.ftp_rx_file_byte_counter / 2048) * 2048,TEMPF_DATA_FROM_FTP, ftp_struct.ftp_rx_len);
+					ftp_struct.ftp_rx_len = 0;
+					ftp_struct.ftp_rx_file_byte_counter = 0;
+				}
 			}
 		}
 		else if(ftp_struct.ftp_rx_file_byte_counter > boot_struct.program_total_size)	//-出错
@@ -927,9 +947,12 @@ printf("\r\n boot_struct.program_total_size = %d ftp_struct.ftp_rx_file_byte_cou
 		}
 		else
 		{
-			mat_index = SubMatch((uint8*)FTPGET_OK_ACK,StrLen((uint8*)FTPGET_OK_ACK,0),data + end_head,len - end_head);	//-保证是尾部而不是数据部分
-			if(mat_index > 0)
+			cmp_data[8] = '1';cmp_data[9] = ',';cmp_data[10] = '1';cmp_data[11] = 0;
+			mat_index = SubMatch(cmp_data, 11, data + end_head, len - end_head);	//-保证是尾部而不是数据部分
+			if(mat_index > 0){
+COMPARA_LAB:				
 				g_at_cmd_struct[AT_FTPGET2_INDEX].exe_flag = EXE_CONTINUE;	//-需要增加超时退出
+			}
 		}
 		
 	}
@@ -953,7 +976,7 @@ void AtFTPSIZEFun(uint8 *data,uint16 len,uint8 flag)
 	uint8 mat_index,i = 0,j = 0;
 	uint8 cmp_data[] = {"+FTPSIZE: 1,0,"};
 	uint32 temp_len = 0;
-	
+		
 	g_at_cmd_struct[AT_FTPSIZE_INDEX].exe_flag = EXE_FAIL;
 	
 	if(flag) {
@@ -988,6 +1011,20 @@ void L218SendAtCmd(uint8 cmd_index,uint8 app_data[],uint8 app_len,uint8 mat_data
 {
 	uint8 count,time,ack_flag = FALSE,rx_data[L218_MAX_BUF_LEN];
 	uint16 rx_len = 0,mat_index = 0;
+  uint8  i = 0,cmp_data[20];// = {"+FTPGET: 1,0"};
+	cmp_data[i++] = '+';
+	cmp_data[i++] = 'F';
+	cmp_data[i++] = 'T';
+	cmp_data[i++] = 'P';
+	cmp_data[i++] = 'G';
+	cmp_data[i++] = 'E';
+	cmp_data[i++] = 'T';
+	cmp_data[i++] = ':';
+	cmp_data[i++] = ' ';	//8
+	cmp_data[i++] = '1';	
+	cmp_data[i++] = ',';
+	cmp_data[i++] = '0';
+	cmp_data[i++] = 0;
 	
 	g_at_cmd_struct[cmd_index].exe_flag = EXE_NO;
 	//指令发送次数
@@ -1022,10 +1059,29 @@ void L218SendAtCmd(uint8 cmd_index,uint8 app_data[],uint8 app_len,uint8 mat_data
 					ack_flag = TRUE;
 					break;
 				}
+				else if(cmd_index == AT_FTPGET2_INDEX){
+					mat_index = SubMatch(cmp_data, 12, rx_data, rx_len);
+					if(mat_index > 0){
+						if((ftp_struct.ftp_rx_file_byte_counter+rx_len) >= boot_struct.program_total_size){
+						#ifdef L218_DEBUG
+							printf("FTP DOWNLOAD FILE END\n\r");
+						#endif
+						ack_flag = TRUE;
+						break;
+						}
+					}
+					else {
+						cmp_data[9] = '2';
+						if(SubMatch(cmp_data, 12, rx_data, rx_len) > 0){
+							break;
+						}
+						
+						cmp_data[9] = '1';
+					}
+				}
 			}
 		}
-		if(ack_flag)
-		{
+		if(ack_flag){
 			break;
 		}
 	}
@@ -2312,7 +2368,6 @@ void SearchDataFromSer(void)
 	if(reclen < 15){//"+RECEIVE,x,x:\r\n"至少15字节
 		return;
 	}
-//	ReadOverTailIndex(reclen);	//什么时候执行？？？
 	colon = SubMatch((uint8 *)GPRS_HAVE_RX_DATA,9,recdata,reclen);
 	if(colon > 0){
 		for(; colon < reclen; colon++){	//从9~20字段找逗号与冒号
@@ -2348,7 +2403,7 @@ void SearchDataFromFtp(void)
 {
 	uint8 res=2,run=0;
 	
-	if(g_sysmiscrun_struct.ProgramUpgrade_flag == 1){
+	if(g_sysmiscrun_struct.ProgramUpgrade_flag == 2){
 		run = 1;
 		ftp_struct.ftp_txstep = e_ftpstart;
 		while(run){
@@ -2357,26 +2412,29 @@ void SearchDataFromFtp(void)
 			if(ftp_struct.ftp_upgrade_fail_flag == 1){	
 				g_sysmiscrun_struct.ProgramUpgrade_flag = 0;
 				run = 0;
-				printf("固件下载失败\n");
-//				SysReset();												// 下载固件失败,复位终端有参数需要纠正
+				#ifdef FTP_DEBUG
+					printf("固件下载失败\n");
+				#endif
+				SysReset();												// 下载固件失败,复位终端有参数需要纠正
 			}
 			else if(ftp_struct.ftp_upgrade_success_flag == 1){	
-				g_sysmiscrun_struct.ProgramUpgrade_flag = 2;
+				g_sysmiscrun_struct.ProgramUpgrade_flag = 3;
 				run = 0;
 			}
 		}
 	}	
 
-	if(ftp_struct.ftp_upgrade_success_flag == 1){//-成功获取更新代码,置标志位,让boot升级
-		res = FlashErase(SYS_BOOT_PARA_STRUCT_START_ADDR);
+	if(ftp_struct.ftp_upgrade_success_flag == 1){//-成功获取更新代码,置标志位,让boot升级 
+		res = FlashErase(FLASH_BOOT_PARA_START_ADDR);
 		if(res){
 			boot_struct.program_update_flag = VALID_VAL_DWORD_AA;
 			boot_struct.sys_para_init_flag  = INVALID_VAL_DWORD_55;
-			res = FlashWrite(SYS_BOOT_PARA_STRUCT_START_ADDR,(uint8*)&boot_struct.program_update_flag,12);
+			res = FlashWrite(FLASH_BOOT_PARA_START_ADDR,(uint8*)&boot_struct.program_update_flag,12);
 			if(res){
 				ftp_struct.ftp_upgrade_success_flag = 0;
 				g_sysmiscrun_struct.ProgramUpgrade_flag = 0;
-//				SysReset();												// boot标志完成，复位终端到boot程序中升级固件
+				printf("Device upgrade success\r\n");
+				SysReset();												// boot标志完成，复位终端到boot程序中升级固件
 			#ifdef FTP_DEBUG
 				LocalUartFixedLenSend((uint8*)"Device upgrade success\r\n",StrLen((uint8*)"Device upgrade success\r\n",0));
 			}

@@ -10,34 +10,35 @@ void SetPara2FactoryReset(void)
 	uint8 i ;
 		
 	g_propara_union.Item.SavePeri	 = 10000;	//10000ms
-	g_propara_union.Item.NorUpPeri = 30;		//1~30s å‘¨æœŸä¸Šä¼ ä¿¡æ¯é—´éš”
+	g_propara_union.Item.NorUpPeri = 30;		//1~30s ÖÜÆÚÉÏ´«ĞÅÏ¢¼ä¸ô
 	g_propara_union.Item.AlrUpPeri = 1000;	//1000ms
 	g_propara_union.Item.HeartPeri = 30;		//1~240s
-	g_propara_union.Item.PAckTim	 = 30;		//å¹³å°è¶…æ—¶
-	g_propara_union.Item.NLogTim	 = 10;		//ä¸‰æ¬¡å¤±è´¥é‡ç™»å½•æ—¶é—´é—´éš”min
+	g_propara_union.Item.PAckTim	 = 30;		//Æ½Ì¨³¬Ê±
+	g_propara_union.Item.NLogTim	 = 10;		//Èı´ÎÊ§°ÜÖØµÇÂ¼Ê±¼ä¼ä¸ômin
 	
-	g_propara_union.Item.DomainLen = 4;										//å¹³å°åŸŸåé•¿åº¦									 										
-	g_propara_union.Item.Domain[0] = 218;									//å¹³å°åŸŸå	
+	g_propara_union.Item.DomainLen = 4;										//Æ½Ì¨ÓòÃû³¤¶È									 										
+	g_propara_union.Item.Domain[0] = 218;									//Æ½Ì¨ÓòÃû	
 	g_propara_union.Item.Domain[1] = 94;
 	g_propara_union.Item.Domain[2] = 153;
 	g_propara_union.Item.Domain[3] = 146;	
-	g_propara_union.Item.Port			 = 9903;//27055;//			//å¹³å°ç«¯å£	
-	g_propara_union.Item.TAckTim	 = 0xFFFF;							//ç»ˆç«¯åº”ç­”è¶…æ—¶æ—¶é—´
-	g_propara_union.Item.PDomainLen = 4;									//å¹³å°åŸŸåé•¿åº¦									 										
-	g_propara_union.Item.PDomain[0] = 218;								//å…¬å…±å¹³å°åŸŸå	
+	g_propara_union.Item.Port			 = 9903;//27055;//			//Æ½Ì¨¶Ë¿Ú	
+	g_propara_union.Item.TAckTim	 = 0xFFFF;							//ÖÕ¶ËÓ¦´ğ³¬Ê±Ê±¼ä
+	g_propara_union.Item.PDomainLen = 4;									//Æ½Ì¨ÓòÃû³¤¶È									 										
+	g_propara_union.Item.PDomain[0] = 218;								//¹«¹²Æ½Ì¨ÓòÃû	
 	g_propara_union.Item.PDomain[1] = 94;
 	g_propara_union.Item.PDomain[2] = 153;
 	g_propara_union.Item.PDomain[3] = 146;	
-	g_propara_union.Item.PPort			= 20002;//27055;//		//å…¬å…±å¹³å°ç«¯å£	
-	g_propara_union.Item.Monitor		= 0xFF;							//æ˜¯å¦æŠ½æ ·æ£€æµ‹ä¸­	
+	g_propara_union.Item.PPort			= 20002;//27055;//		//¹«¹²Æ½Ì¨¶Ë¿Ú	
+	g_propara_union.Item.Monitor		= 0xFF;							//ÊÇ·ñ³éÑù¼ì²âÖĞ	
 	
 	for(i=4; i<PRO_DOMAINLEN_MAX;i++){
 		g_propara_union.Item.Domain[i]  = 0x00;
 		g_propara_union.Item.PDomain[i] = 0x00;
 	}	
-	memcpy(g_propara_union.Item.g_para_HDVers,"Dh000",5);	
-	memcpy(g_propara_union.Item.g_para_SFVers,"Ds000",5);		
-		
+//	memcpy(g_propara_union.Item.g_para_HDVers,"Dh744",5);	
+//	memcpy(g_propara_union.Item.g_para_SFVers,"Ds744",5);	
+	memcpy(g_propara_union.Item.g_para_HDVers,"Dh700",5);	
+	memcpy(g_propara_union.Item.g_para_SFVers,"Ds724",5);	
 		
 }
 void SetGPRSNetPara(void){
@@ -45,13 +46,13 @@ void SetGPRSNetPara(void){
 	
 	g_gprs_data_struct.SendDataLen=0;
   g_gprs_data_struct.SendData=(uint8 *)GPRStestdata;
-//	//ä¼ä¸šå¹³å° 9903
+//	//ÆóÒµÆ½Ì¨ 9903
 //	g_gprs_data_struct.IP[0] = g_propara_union.Item.Domain[0];
 //	g_gprs_data_struct.IP[1] = g_propara_union.Item.Domain[1];
 //	g_gprs_data_struct.IP[2] = g_propara_union.Item.Domain[2];
 //	g_gprs_data_struct.IP[3] = g_propara_union.Item.Domain[3];
 //	g_gprs_data_struct.Port = g_propara_union.Item.Port;
-	//å…¬å…±å¹³å° 20000
+	//¹«¹²Æ½Ì¨ 20000
 	g_gprs_data_struct.IP[0] = g_propara_union.Item.PDomain[0];
 	g_gprs_data_struct.IP[1] = g_propara_union.Item.PDomain[1];
 	g_gprs_data_struct.IP[2] = g_propara_union.Item.PDomain[2];
@@ -61,12 +62,12 @@ void SetGPRSNetPara(void){
 	g_gprs_data_struct.setnetparaok_flag = 1;
 }
 
-static void ProAlarmHeadTailSave(void)///ä¿å­˜é¡µç 
+static void ProAlarmHeadTailSave(void)///±£´æÒ³Âë
 {
 	uint8  data[9],res;
 	
 	if(g_sysmiscrun_struct.ProgramUpgrade_flag != 0){	
-//		printf("æ­£åœ¨å‡çº§,ä¸ä¿å­˜é¡µç \n");
+//		printf("ÕıÔÚÉı¼¶,²»±£´æÒ³Âë\n");
 		return ;
 	}
 
@@ -81,7 +82,7 @@ static void ProAlarmHeadTailSave(void)///ä¿å­˜é¡µç 
 	
 	data[8] = U8SumCheck(data,8);
 	res = FlashErase(SYS_ALARM_INDEXPAGE);	
-	if(!res){// å¤±è´¥
+	if(!res){// Ê§°Ü
 		return;
 	}
 	FlashWrite(SYS_ALARM_INDEXPAGE, data, 9);
@@ -93,35 +94,35 @@ static void ProAlarmPageSave(uint8 data[],uint16 len)
 	uint32 addr;
 	
 	if(g_sysmiscrun_struct.ProgramUpgrade_flag != 0){	
-//		printf("æ­£åœ¨å‡çº§,ä¸å†™é¡µä¿å­˜\n");
+//		printf("ÕıÔÚÉı¼¶,²»Ğ´Ò³±£´æ\n");
 		return ;
 	}
 	
-	//æ»¡ä¸€é¡µ
-	if((g_sysalarm_struct.headindex&0x03)==0){	//FLASHæ“¦é™¤ 2Kå­—èŠ‚/æ®µ å³512*4
+	//ÂúÒ»Ò³
+	if((g_sysalarm_struct.headindex&0x03)==0){	//FLASH²Á³ı 2K×Ö½Ú/¶Î ¼´512*4
 		addr = SYS_ALARM_START_ADDR + g_sysalarm_struct.headindex*ALARM_PAGE_SIZE;
 		res = FlashErase(addr);
-		if(!res){// å¤±è´¥
+		if(!res){// Ê§°Ü
 			goto RETURN_LAB;
 		}
 	}
 	
-	//æ»¡ä¸€åŒ…
+	//ÂúÒ»°ü
 	addr = SYS_ALARM_START_ADDR + g_sysalarm_struct.headindex*ALARM_PAGE_SIZE ;
 	res = FlashWrite(addr, data, len);
-	if(!res){// å¤±è´¥
+	if(!res){// Ê§°Ü
 		goto RETURN_LAB;
 	}
 	
 	g_sysalarm_struct.headindex = (g_sysalarm_struct.headindex+1)%SYS_ALARM_MAXINDEX;
 	if(g_sysalarm_struct.headindex == g_sysalarm_struct.tailindex){
-		//tailå‰ç§»8åŒ…å³æ•´æ®µæ“¦é™¤æ—¶èˆæ‰å…¶ä½™7åŒ…æ•°æ®ï¼›è‹¥è¦ä¸èˆéœ€å¦å¤–å¼€ä¸€æ®µä¸´æ—¶ä¿å­˜æ—§æ•°æ®ï¼Œè¿™æ ·ä¼šå¢åŠ æ“¦é™¤æ¬¡æ•°
+		//tailÇ°ÒÆ8°ü¼´Õû¶Î²Á³ıÊ±ÉáµôÆäÓà7°üÊı¾İ£»ÈôÒª²»ÉáĞèÁíÍâ¿ªÒ»¶ÎÁÙÊ±±£´æ¾ÉÊı¾İ£¬ÕâÑù»áÔö¼Ó²Á³ı´ÎÊı
 		g_sysalarm_struct.tailindex = (g_sysalarm_struct.tailindex+4)%SYS_ALARM_MAXINDEX;
 	}
 	
-	if(g_sysmiscrun_struct.have_sysAlarm_flag==0 || g_sysmiscrun_struct.have_sysAlarm_flag==3){	//æ— æŠ¥è­¦ æˆ– æ— æŠ¥è­¦ç›²åŒº
+	if(g_sysmiscrun_struct.have_sysAlarm_flag==0 || g_sysmiscrun_struct.have_sysAlarm_flag==3){	//ÎŞ±¨¾¯ »ò ÎŞ±¨¾¯Ã¤Çø
 		page = (SYS_ALARM_MAXINDEX + g_sysalarm_struct.headindex - g_sysalarm_struct.tailindex)%SYS_ALARM_MAXINDEX;
-		if(page > g_sysmiscrun_struct.save_sysAlarm_numb){	//åªä¿ç•™è§„å®šæ¡æ•°
+		if(page > g_sysmiscrun_struct.save_sysAlarm_numb){	//Ö»±£Áô¹æ¶¨ÌõÊı
 			page = page - g_sysmiscrun_struct.save_sysAlarm_numb;
 			g_sysalarm_struct.tailindex = (g_sysalarm_struct.tailindex+page)%SYS_ALARM_MAXINDEX;
 		}
@@ -145,7 +146,7 @@ void ProPutIntoAlarm(uint8 data[], uint16 len, uint8 cmd)
 	}
 	
 	
-	//å¯ä»¥åœ¨è¿™é‡Œè¯»å–ä¸‹FLASH  æ¥åŒºåˆ†è¦ä¸è¦æ“¦é™¤
+	//¿ÉÒÔÔÚÕâÀï¶ÁÈ¡ÏÂFLASH  À´Çø·ÖÒª²»Òª²Á³ı
 //	if(g_sysalarm_struct.data[0] != VALID_VAL_2A){		
 		tmpdata[0] = VALID_VAL_2A;
 		tmpdata[1] = tmplen >> 8;
@@ -193,7 +194,7 @@ static void Read_Lsnal_Index(void)
 	uint8  data[9];
 	union32 tmp;
 	
-	ExteFlashRead(SYS_LSNAL_SPIOTHER_ADDR, data, 9);
+	ExteFlashRead(SYS_LSNAL_SPIINDEX_ADDR, data, 9);
 	
 	if(data[8] == U8SumCheck(data,8)){		
 		tmp.byte.HH = data[0];
@@ -220,7 +221,7 @@ static void Read_Lsnal_Index(void)
 void ProWrite_SysPara(void)
 {
 	if(g_sysmiscrun_struct.ProgramUpgrade_flag != 0){	
-//		printf("æ­£åœ¨å‡çº§,ä¸ä¿å­˜å‚æ•°è®¾ç½®\n");
+//		printf("ÕıÔÚÉı¼¶,²»±£´æ²ÎÊıÉèÖÃ\n");
 		return ;
 	}
 	FlashErase(SYS_SAVEPARA_INDEXPAGE);
@@ -235,7 +236,7 @@ static void ProRead_SysPara(void)
 		#ifdef SYS_TASK_DEBUG
 		printf("ProRead_SysPara ERROR\r\n");
 		#endif
-		// æ¢å¤å‡ºå‚å¹¶ä¿å­˜
+		// »Ö¸´³ö³§²¢±£´æ
 		SetPara2FactoryReset();
 		ProWrite_SysPara();
 	}
@@ -248,7 +249,7 @@ static void TerminalMiscPeriod(uint8 past_sec)
 {		
 	if(g_propara_union.Item.PAckTim!=0xFF && g_sysmiscrun_struct.PAckTim_count!=0xFF){
 		if(++g_sysmiscrun_struct.PAckTim_count >= g_propara_union.Item.PAckTim){
-			printf("å¹³å°è¶…æ—¶\r\n");
+			printf("Æ½Ì¨³¬Ê±\r\n");
 			g_sysmiscrun_struct.PAckTim_count = 0xFF;
 		}
 	}
@@ -256,16 +257,16 @@ static void TerminalMiscPeriod(uint8 past_sec)
 
 static void TerminalSavePeriod(uint16 past_ms)
 {
-	if(g_sysmiscrun_struct.have_sysAlarm_flag == 1){//æœ‰æŠ¥è­¦
-		ProPutIntoAlarm(NULL, 0, PRO_UP_REAL_INFO_ID);		//1sæ‰§è¡Œä¸€æ¬¡ä¿å­˜
+	if(g_sysmiscrun_struct.have_sysAlarm_flag == 1){//ÓĞ±¨¾¯
+		ProPutIntoAlarm(NULL, 0, PRO_UP_REAL_INFO_ID);		//1sÖ´ĞĞÒ»´Î±£´æ
 		
-		//æŠ¥è­¦è¶…æ—¶ åœæ­¢1sæŠ¥è­¦ä¸Šä¼ è½¬ä¸ºæ­£å¸¸ä¸Šä¼   è‹¥ä»éœ€1sæŠ¥è­¦ä¸Šä¼ åˆ™æŠŠä»¥ä¸‹æ¡ä»¶ä»£ç æ³¨é‡Š
+		//±¨¾¯³¬Ê± Í£Ö¹1s±¨¾¯ÉÏ´«×ªÎªÕı³£ÉÏ´«  ÈôÈÔĞè1s±¨¾¯ÉÏ´«Ôò°ÑÒÔÏÂÌõ¼ş´úÂë×¢ÊÍ
 		if(++g_sysmiscrun_struct.have_sysAlarm_count >= SYS_HAVEALARM_COUNT){
 			g_sysmiscrun_struct.have_sysAlarm_count = SYS_HAVEALARM_COUNT;
-			g_sysmiscrun_struct.have_sysAlarm_flag = 2;				//è¶…æ—¶ ç½®æ£€æµ‹æœ‰æ— æŠ¥è­¦ç›²åŒº
+			g_sysmiscrun_struct.have_sysAlarm_flag = 2;				//³¬Ê± ÖÃ¼ì²âÓĞÎŞ±¨¾¯Ã¤Çø
 		}
 	}
-	else if(g_sysmiscrun_struct.have_sysAlarm_flag==0 || g_sysmiscrun_struct.have_sysAlarm_flag==3){	//æ— æŠ¥è­¦ æˆ– æ— æŠ¥è­¦ç›²åŒº
+	else if(g_sysmiscrun_struct.have_sysAlarm_flag==0 || g_sysmiscrun_struct.have_sysAlarm_flag==3){	//ÎŞ±¨¾¯ »ò ÎŞ±¨¾¯Ã¤Çø
 		g_sysmiscrun_struct.SavePeri_count += past_ms;
 		if(g_sysmiscrun_struct.SavePeri_count >= g_propara_union.Item.SavePeri){
 			
@@ -275,14 +276,16 @@ static void TerminalSavePeriod(uint16 past_ms)
 	}
 }
 
+
 static void TerminalUpLsnalAlrm(void)
 {
-	uint8  data[TMP_BUFF_MAXLEN-25];	//buffè€ƒè™‘å¸§å¤´å°¾-25
+	uint8  rx_buf[TMP_BUFF_MAXLEN-25],data[5];	//buff¿¼ÂÇÖ¡Í·Î²-25
+	uint8  sum=0;
 	uint16 len;
 	uint32 addr;
 	
 	if(g_sysmiscrun_struct.have_sysAlarm_flag==0 || g_sysmiscrun_struct.have_sysAlarm_flag==3){	
-		return;												//æ— æŠ¥è­¦ æˆ– æ— æŠ¥è­¦ç›²åŒº
+		return;												//ÎŞ±¨¾¯ »ò ÎŞ±¨¾¯Ã¤Çø
 	}
 	
 	if(g_sysalarm_struct.tailindex != g_sysalarm_struct.headindex){
@@ -291,10 +294,18 @@ static void TerminalUpLsnalAlrm(void)
 		
 		if(data[0]==VALID_VAL_2A && (data[3]==PRO_UP_LSNAL_INFO_ID || data[3]==PRO_UP_REAL_INFO_ID)){
 			len = (data[1]<<8) + data[2];
-			FlashRead(addr+4, &data[4], len+5);		
-			if(data[len+4] == U8SumCheck(data,len+4)){//
+			sum = U8SumCheck(data, 4);			
+			
+			FlashRead(addr+4, &rx_buf[PRO_DATA_INDEX], len+1);	
+			sum += U8SumCheck(&rx_buf[PRO_DATA_INDEX], len);	
+			if(rx_buf[PRO_DATA_INDEX + len] == sum){//
+				ProConstructFrameHead(rx_buf, len, data[3]);
+				len += PRO_DATA_INDEX;
+				ProConstructFrameTail(rx_buf, len);
+				
 				g_sysalarm_struct.tailindex = (g_sysalarm_struct.tailindex+1)%SYS_ALARM_MAXINDEX;
-				ProPacket(&data[4],len,data[3],TRUE);
+				ProPacket(rx_buf, len+1, data[3], FALSE);//TRUE);
+				
 			}
 			else{
 				goto RETURN_LAB;
@@ -306,7 +317,7 @@ static void TerminalUpLsnalAlrm(void)
 		
 	}
 	else{
-		if(g_sysmiscrun_struct.have_sysAlarm_flag == 2){	//è¶…æ—¶æŠ¥è­¦ç›²åŒºæ•°æ®å‘å®Œ
+		if(g_sysmiscrun_struct.have_sysAlarm_flag == 2){	//³¬Ê±±¨¾¯Ã¤ÇøÊı¾İ·¢Íê
 			g_sysmiscrun_struct.have_sysAlarm_flag = 3;
 		}
 		
@@ -320,7 +331,7 @@ RETURN_LAB:
 
 static void TerminalAlrmUpPeriod(uint16 past_ms)
 {
-	if(g_sysmiscrun_struct.have_sysAlarm_flag == 1){//æœ‰æŠ¥è­¦		
+	if(g_sysmiscrun_struct.have_sysAlarm_flag == 1){//ÓĞ±¨¾¯		
 		g_sysmiscrun_struct.AlrUpPeri_count += past_ms;
 		if(g_sysmiscrun_struct.AlrUpPeri_count >= g_propara_union.Item.AlrUpPeri){
 			
@@ -328,14 +339,14 @@ static void TerminalAlrmUpPeriod(uint16 past_ms)
 			g_sysmiscrun_struct.AlrUpPeri_count = 0;
 		}
 	}
-	else if(g_sysmiscrun_struct.have_sysAlarm_flag == 0){//æ— æŠ¥è­¦		
+	else if(g_sysmiscrun_struct.have_sysAlarm_flag == 0){//ÎŞ±¨¾¯		
 		g_sysmiscrun_struct.have_sysAlarm_count = 0;
 	}
 }
 
 static void TerminalNorUpPeriod(uint8 past_sec)
 {		
-	if(g_sysmiscrun_struct.have_sysAlarm_flag==0 || g_sysmiscrun_struct.have_sysAlarm_flag==3){//æ²¡æœ‰æŠ¥è­¦	æˆ– 
+	if(g_sysmiscrun_struct.have_sysAlarm_flag==0 || g_sysmiscrun_struct.have_sysAlarm_flag==3){//Ã»ÓĞ±¨¾¯	»ò 
 		if(++g_sysmiscrun_struct.NorUpPeri_count >= g_propara_union.Item.NorUpPeri){
 			ProUpRealFormation();
 			g_sysmiscrun_struct.NorUpPeri_count = 0;
@@ -345,7 +356,7 @@ static void TerminalNorUpPeriod(uint8 past_sec)
 
 static void TerminalHeart(uint8 past_sec)
 {
-	if(++g_sysmiscrun_struct.upheart_count > g_propara_union.Item.HeartPeri){	// 1sç´¯åŠ ï¼Œå‘é€å¿ƒè·³
+	if(++g_sysmiscrun_struct.upheart_count > g_propara_union.Item.HeartPeri){	// 1sÀÛ¼Ó£¬·¢ËÍĞÄÌø
 		ProUpHeartBeat();
 		g_sysmiscrun_struct.upheart_count = 0;
 	}
@@ -354,15 +365,15 @@ static void TerminalHeart(uint8 past_sec)
 static void TerminalMainPowerStatu(void)
 {
 	switch(g_sysmiscrun_struct.main_power_statu){
-		case 0x01:{//é¦–æ¬¡ä¸Šç”µ
+		case 0x01:{//Ê×´ÎÉÏµç
 			if(CHECK_POW() == LOW_STATE){
 				g_sysmiscrun_struct.main_power_statu = 2;
 			}
 			break;
 		}
-		case 0x02:{//æ–­ç”µ
+		case 0x02:{//¶Ïµç
 			if(CHECK_POW() == HIGH_STATE){
-				//å†æ¬¡ä¸Šç”µï¼Œå¤ä½
+				//ÔÙ´ÎÉÏµç£¬¸´Î»
 				SysReset();
 			}			
 			break;
@@ -378,26 +389,26 @@ static void TerminalMainPowerStatu(void)
 static void TerminalWakeUp(void)
 {
 	ErrorStatus HSEStartUpStatus;
-	//HSEé‡æ–°é…ç½®
-	RCC_HSEConfig(RCC_HSE_ON); 														/*HSESä½¿èƒ½*/  
-	HSEStartUpStatus = RCC_WaitForHSEStartUp(); 					/*ç­‰å¾…*/
+	//HSEÖØĞÂÅäÖÃ
+	RCC_HSEConfig(RCC_HSE_ON); 														/*HSESÊ¹ÄÜ*/  
+	HSEStartUpStatus = RCC_WaitForHSEStartUp(); 					/*µÈ´ı*/
 	if(HSEStartUpStatus == SUCCESS) { 
-		RCC_PLLCmd(ENABLE);																	/*ä½¿èƒ½*/
-		while(RCC_GetFlagStatus(RCC_FLAG_PLLRDY)== RESET); 	/*ç­‰å¾…PLLæœ‰æ•ˆ*/      
-		RCC_SYSCLKConfig(RCC_SYSCLKSource_PLLCLK);					/*å°†PLLä½œä¸ºç³»ç»Ÿæ—¶é’Ÿ*/
-		while(RCC_GetSYSCLKSource() != 0x08);								/*ç­‰å¾…*/
+		RCC_PLLCmd(ENABLE);																	/*Ê¹ÄÜ*/
+		while(RCC_GetFlagStatus(RCC_FLAG_PLLRDY)== RESET); 	/*µÈ´ıPLLÓĞĞ§*/      
+		RCC_SYSCLKConfig(RCC_SYSCLKSource_PLLCLK);					/*½«PLL×÷ÎªÏµÍ³Ê±ÖÓ*/
+		while(RCC_GetSYSCLKSource() != 0x08);								/*µÈ´ı*/
 	} 
 	RCC->AHBENR = 0x14;
 	RCC->APB1ENR = 0x18000000;
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA|RCC_APB2Periph_GPIOB|RCC_APB2Periph_GPIOC|RCC_APB2Periph_GPIOE|RCC_APB2Periph_AFIO, ENABLE);	
 	
-	//å¼€å¤–ç”µ
+	//¿ªÍâµç
 	ON_485232_PWR();
 	ON_CT5V_PWR();
-//	ON_GPRS_PWR();  //æ¨¡å—å¼€
-	HIGH_GPRS_DTR(); 	//å”¤é†’L218
-	//é‡åˆå§‹åŒ–	
-	delay_init();	    //åˆå§‹åŒ–systick
+//	ON_GPRS_PWR();  //Ä£¿é¿ª
+	HIGH_GPRS_DTR(); 	//»½ĞÑL218
+	//ÖØ³õÊ¼»¯	
+	delay_init();	    //³õÊ¼»¯systick
 	PvdInit();
 	UsartInit(LOCAL_USART,LOCAL_USART_BPR,USART_DATA_8B,USART_STOPBITS_1,USART_PARITY_NO);
 	UsartInit(GPS_USART  ,GPS_USART_BPR  ,USART_DATA_8B,USART_STOPBITS_1,USART_PARITY_NO);	
@@ -407,7 +418,7 @@ static void TerminalWakeUp(void)
 	DmaInit();
 //	BusiResetModule();
 	
-	if(0){//è‹¥å”¤é†’å‡ºé—®é¢˜   å¤ä½
+	if(0){//Èô»½ĞÑ³öÎÊÌâ   ¸´Î»
 		SysReset();
 	}
 }
@@ -415,20 +426,20 @@ static void TerminalIntoSleep(void)
 {
 	uint8 rtc_counter;
 	
-	if(CHECK_POW() == HIGH_STATE){//æœ‰å¤–ç”µï¼Œä¸ä¼‘çœ 
+	if(CHECK_POW() == HIGH_STATE){//ÓĞÍâµç£¬²»ĞİÃß
 		return;
 	}			
 
-	//ä¿å­˜
+	//±£´æ
 	
-	//å…³å¤–ç”µ
+	//¹ØÍâµç
 	OFF_485232_PWR();
 	OFF_CT5V_PWR();
 //	OFF_GPRS_PWR();
-		LOW_GPRS_DTR(); 	//ä¼‘çœ L218
+		LOW_GPRS_DTR(); 	//ĞİÃßL218
 	ADC_Cmd(ADC1, DISABLE);
 
-	//è¿›ä¼‘çœ 
+	//½øĞİÃß
 	rtc_counter = RTC_GetCounter();
 	while(1){
 		FeedWtd();
@@ -437,7 +448,7 @@ static void TerminalIntoSleep(void)
 		RTC_WaitForLastTask();
 		PWR_EnterSTOPMode(PWR_Regulator_ON,PWR_STOPEntry_WFI);
 
-		if(CHECK_POW() == HIGH_STATE){//æœ‰å¤–ç”µï¼Œå”¤é†’
+		if(CHECK_POW() == HIGH_STATE){//ÓĞÍâµç£¬»½ĞÑ
 			break;
 		}
 	}
@@ -450,9 +461,9 @@ static void TerminalIntoSleep(void)
 
 
 /******************************************************
-//åº”ç”¨ç¨‹åºä»»åŠ¡
+//Ó¦ÓÃ³ÌĞòÈÎÎñ
 ******************************************************/
-//å‘¨æœŸå¤„ç†ä»»åŠ¡
+//ÖÜÆÚ´¦ÀíÈÎÎñ
 void Period_task(void *pdata)
 {
 	uint16 count_time,period_time;
@@ -465,7 +476,7 @@ void Period_task(void *pdata)
 	OSTimeDlyHMSM(0, 0, 0, 500);	
 	
 	
-	g_propara_union.Item.NorUpPeri = 30;		//1~30s å‘¨æœŸä¸Šä¼ ä¿¡æ¯é—´éš”   qlj ä¸´æ—¶ä½¿ç”¨å¾…åˆ é™¤
+	g_propara_union.Item.NorUpPeri = 30;		//1~30s ÖÜÆÚÉÏ´«ĞÅÏ¢¼ä¸ô   qlj ÁÙÊ±Ê¹ÓÃ´ıÉ¾³ı
 	while(1){
 		OSTimeDlyHMSM(0, 0, 0, 200);	
 		count_time = (count_time+1)%60000;
@@ -477,32 +488,34 @@ void Period_task(void *pdata)
 		g_propostion_union.Item.longitude   = g_gps_struct.gpsinform.subitem.longitude;
 		g_propostion_union.Item.latitude    = g_gps_struct.gpsinform.subitem.latitude;
 		
-			if(period_time%20 == 0){//1s			3çº§æŠ¥è­¦   4s+50ms
-				if(g_pro_struct.login_center_flag == TRUE){	//å·²ç»ç™»å½•	
+			if(period_time%5 == 0){//1s			3¼¶±¨¾¯   4s+50ms
+				if(g_pro_struct.login_center_flag == TRUE){	//ÒÑ¾­µÇÂ¼	
 					TerminalUpLsnalAlrm();
 				}
 			}
 			
-			if(period_time%5 == 1){//1s			ä¿å­˜æ•°æ®   
-				RtcGetCalendarTime(g_protime_union.arry);		//è¯»å–æ—¶é—´
-				if(g_pro_struct.login_center_flag == TRUE){	//å·²ç»ç™»å½•	
+			if(period_time%4 == 1){//1s			±£´æÊı¾İ   
+				RtcGetCalendarTime(g_protime_union.arry);		//¶ÁÈ¡Ê±¼ä
+				if(g_pro_struct.login_center_flag == TRUE){	//ÒÑ¾­µÇÂ¼	
 					TerminalSavePeriod(1000);
 				}
 			}
-			if(period_time%150 == 2){//30		å·¥ä½œå‚æ•°
-				g_sysmiscrun_struct.need_check_time_flag = 0x01;			//ä»GPSæ ¡æ—¶						
+			if(period_time%150 == 2){//30		¹¤×÷²ÎÊı
+				g_sysmiscrun_struct.need_check_time_flag = 0x01;			//´ÓGPSĞ£Ê±						
 			}
 			
-			if(period_time%5 == 3){//1		å…¶ä»–	
+			if(period_time%5 == 3){//1		ÆäËû	
 				ProPeriodTx(1);
-				if(g_pro_struct.login_center_flag == TRUE){	//å·²ç»ç™»å½•		
+				if(g_pro_struct.login_center_flag == TRUE){	//ÒÑ¾­µÇÂ¼		
 					TerminalNorUpPeriod(1);
 					TerminalHeart(1);
 				}
 				
+				CanMonitor(1);
 				TerminalMainPowerStatu();
 			}
 		
 				
 	}
 }
+

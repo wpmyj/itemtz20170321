@@ -150,6 +150,12 @@
 	L218_EXTERN const uint8 FTP_TYPEOFINTERCONNECT[];
 	L218_EXTERN	const uint8 FTP_SETAPN[];
 	L218_EXTERN const uint8 FTP_OPENBEARER[] ;
+	L218_EXTERN const uint8 AT_FTPSERV[];
+	L218_EXTERN const uint8 AT_FTPPORT[];
+	L218_EXTERN const uint8 AT_FTPUN[];
+	L218_EXTERN const uint8 AT_FTPPW[] ;
+	L218_EXTERN const uint8 AT_FTPGETNAME[];
+	L218_EXTERN const uint8 AT_FTPGETPATH[]; 
 
 	L218_EXTERN const uint8 RECV_IPD_ACK[];       	// RECV DATA LEN, ADD "+IPD" HEADER
 	//L218_EXTERN const uint8 RECV_FROM_ACK[];      // RECV FORM: STRING IF SET SHOW "RECV FROM" HEADER
@@ -160,12 +166,12 @@
 	L218_EXTERN const uint8 CIPCLOSE_EXTRA_OK[];		// IP IS CLOSED SUCCESS
 	L218_EXTERN const uint8 GPRS_HAVE_RX_DATA[];		// 有接收数据
 	L218_EXTERN const uint8 CONST_DATA_1[];					// 有接收数据
-	L218_EXTERN const uint8 FTPGET_OK_ACK[];				// Open FTP session SUCCESS
-	L218_EXTERN const uint8 FTPGET_FINISH_ACK[];		// means finish read DATA
+//	L218_EXTERN const uint8 FTPGET_OK_ACK[];				// Open FTP session SUCCESS
+//	L218_EXTERN const uint8 FTPGET_FINISH_ACK[];		// means finish read DATA
 
 	L218_EXTERN	AT_CMD_STRUCT g_at_cmd_struct[];
 	
-//	L218_EXTERN	void L218SendAtCmd(uint8 cmd_index,uint8 app_data[],uint8 app_len,uint8 mat_data[],uint8 mat_len);
+	L218_EXTERN	void L218SendAtCmd(uint8 cmd_index,uint8 app_data[],uint8 app_len,uint8 mat_data[],uint8 mat_len);
 	L218_EXTERN	uint16 L218UartIsRxDone(uint8 data[],uint16 len);
 	L218_EXTERN	void ReadOverTailIndex(uint16 len);
 	L218_EXTERN	void L218PowerInit(void);

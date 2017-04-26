@@ -93,9 +93,8 @@ void CanInit(void)
 	CanFilterInit(9,CAN_R_21,CAN_R_22);
 	CanFilterInit(10,CAN_R_23,CAN_R_24);
 	CanFilterInit(11,CAN_R_25,CAN_R_26);
-//	CanFilterInit(12,CAN_R_27,CAN_R_27);
-	CanFilterInit(12,CAN_R_0101,CAN_R_0160);
-	CanFilterInit(13,CAN_R_0201,CAN_R_0230);
+	CanFilterInit(12,CAN_R_0101,CAN_R_0102);
+	CanFilterInit(13,CAN_R_0201,CAN_R_0202);//CAN_R_0230
 	 
 	CAN_ITConfig(CAN1, CAN_IT_FMP0, ENABLE);
 	
@@ -118,13 +117,18 @@ void CanTxData(uint8 data[],uint32 id)
 	CAN_Transmit(CAN1, &TxMessage);
 }
 
+/******************************************************
+//应用层面CAN发送函数
+******************************************************/
 void CanTx(void)
 {
 	uint8 heart_data[CAN_LOCK_DATA_LEN] = {0xFD,0x20,0x00,0x00,0x00,0x00,0x00,0x00};
 	
 	CanTxData(heart_data,0X12345678);
 }
-
+/******************************************************
+//应用层面CAN接收函数
+******************************************************/
 void CanRx(void)
 {
 	uint8 index = 0xff;
@@ -136,11 +140,11 @@ void CanRx(void)
 	if(0x08 == can_msg.DLC){
 		tmp_u32 = can_msg.ExtId;
 		if((tmp_u32&CAN_R1_VT) == CAN_R1_VT){													//是单体电压温度CANID
-			if(tmp_u32>=CAN_R_0101 && tmp_u32<=CAN_R_0160){				//单体电压
-				index = ((tmp_u32>>16)&0xFF) - 1;
+			if(tmp_u32>=CAN_R_0101 && tmp_u32<=CAN_R_0160){							//单体电压
+				index = ((tmp_u32>>16)&0xFF) - 1;//[0~23]
 			}
 			else if(tmp_u32>=CAN_R_0201 && tmp_u32<=CAN_R_0230){	//单体温度
-				index = ((tmp_u32>>16)&0xFF) - 1;
+				index = ((tmp_u32>>16)&0xFF) - ((CAN_R_0201>>16)&0xFF) + ((CAN_R_0160>>16)&0xFF) ;//[24~26]
 			}
 		}
 		else{		
@@ -230,19 +234,31 @@ RETURN_LAB:
 }
 
 
+
+/******************************************************
+//CANID可变滤波器程序（当一个CANID收到数据后通过该程序改变滤波器）
+//单体电压占用滤波器12
+//单体温度占用滤波器13
+******************************************************/
 static void CANR01xx_Filter(uint8 eindex)
 {
-	uint8 eindexmax = ECAN_R_0160 - ECAN_R_0101 + 1;
+//	uint8 eindexmax = ECAN_R_0160 - ECAN_R_0101 + 1;
 	union32 tmpval,tmpu32;
 	
 	tmpval.dword = CAN_R_0101;
-	tmpval.byte.HL = ((eindex+2) % eindexmax) + 1;
+	tmpval.byte.HL += 2;//((eindex+2) % eindexmax);
 	if(eindex & 0x01){//奇数(ID偶数)  更改第三变量对应CANID，保留第二变量对应CANID
+		if(tmpval.byte.HL > CAN01MAX){
+			tmpval.byte.HL = CAN01MINEVEN;
+		}
 		tmpu32.dword = CAN1->sFilterRegister[12].FR1 ;
 		tmpu32.dword = (tmpu32.dword >> 3);
 		CanFilterInit(12,tmpu32.dword,tmpval.dword);
 	}
 	else{							//偶数(ID奇数)  更改第二变量对应CANID，保留第三变量对应CANID
+		if(tmpval.byte.HL > CAN01MAX){
+			tmpval.byte.HL = CAN01MINODD;
+		}
 		tmpu32.dword = CAN1->sFilterRegister[12].FR2;
 		tmpu32.dword = (tmpu32.dword >> 3);
 		CanFilterInit(12,tmpval.dword,tmpu32.dword);
@@ -251,23 +267,35 @@ static void CANR01xx_Filter(uint8 eindex)
 }
 static void CANR02xx_Filter(uint8 eindex)
 {
-	uint8 eindexmax = ECAN_R_0230 - ECAN_R_0201 + 1;
+//	uint8 eindexmax = ECAN_R_0230 - ECAN_R_0201 + 1;
 	union32 tmpval,tmpu32;
 	
 	tmpval.dword = CAN_R_0201;
-	tmpval.byte.HL = ((eindex+2) % eindexmax) + 1 + ECAN_R_0201;
+	tmpval.byte.HL += 2;//((eindex+2) % eindexmax);
 	if(eindex & 0x01){//奇数(ID偶数)  更改第二变量对应CANID，保留第三变量对应CANID
-		tmpu32.dword = CAN1->sFilterRegister[13].FR2;
-		tmpu32.dword = (tmpu32.dword >> 3);
-		CanFilterInit(13,tmpval.dword,tmpu32.dword);
-	}
-	else{							//偶数(ID奇数)  更改第三变量对应CANID，保留第二变量对应CANID
+		if(tmpval.byte.HL > CAN02MAX){
+			tmpval.byte.HL = CAN02MINEVEN;
+		}
 		tmpu32.dword = CAN1->sFilterRegister[13].FR1;
 		tmpu32.dword = (tmpu32.dword >> 3);
 		CanFilterInit(13,tmpu32.dword,tmpval.dword);
 	}
+	else{							//偶数(ID奇数)  更改第三变量对应CANID，保留第二变量对应CANID
+		if(tmpval.byte.HL > CAN02MAX){
+			tmpval.byte.HL = CAN02MINODD;
+		}
+		tmpu32.dword = CAN1->sFilterRegister[13].FR2;
+		tmpu32.dword = (tmpu32.dword >> 3);
+		CanFilterInit(13,tmpval.dword,tmpu32.dword);
+	}
 	
 }
+
+/******************************************************
+//CANID定时可变滤波器程序（当一个CANID长时间收不到数据就通过该程序改变滤波器）
+//单体电压占用滤波器12
+//单体温度占用滤波器13
+******************************************************/
 static void CANR_PeriodChargeFilter(void)
 {
 	static uint32 CAN12filter1,CAN12filter2,CAN13filter1,CAN13filter2;
@@ -278,7 +306,10 @@ static void CANR_PeriodChargeFilter(void)
 		CAN12count1 = 0;
 		tmpu321.dword = CAN1->sFilterRegister[12].FR1 ;
 		tmpu321.dword = (tmpu321.dword >> 3);		
-		tmpu321.byte.HL = (tmpu321.byte.HL + 2)%(1+ECAN_R_0160 - ECAN_R_0101);
+		tmpu321.byte.HL += 2;
+		if(tmpu321.byte.HL > CAN01MAX){
+			tmpu321.byte.HL = CAN01MINODD;
+		}
 		tmpu322.dword = CAN1->sFilterRegister[12].FR2 ;
 		tmpu322.dword = (tmpu322.dword >> 3);
 		CanFilterInit(12,tmpu321.dword,tmpu322.dword);
@@ -299,7 +330,10 @@ static void CANR_PeriodChargeFilter(void)
 		tmpu321.dword = (tmpu321.dword >> 3);		
 		tmpu322.dword = CAN1->sFilterRegister[12].FR2 ;
 		tmpu322.dword = (tmpu322.dword >> 3);
-		tmpu322.byte.HL = (tmpu322.byte.HL + 2)%(1+ECAN_R_0160 - ECAN_R_0101);
+		tmpu322.byte.HL += 2;
+		if(tmpu322.byte.HL > CAN01MAX){
+			tmpu322.byte.HL = CAN01MINEVEN;
+		}
 		CanFilterInit(12,tmpu321.dword,tmpu322.dword);
 	}
 	else{									//更改滤波器计时
@@ -317,7 +351,10 @@ static void CANR_PeriodChargeFilter(void)
 		CAN13count1 = 0;
 		tmpu321.dword = CAN1->sFilterRegister[13].FR1 ;
 		tmpu321.dword = (tmpu321.dword >> 3);		
-		tmpu321.byte.HL = (tmpu321.byte.HL + 2)%(1+ECAN_R_0230 - ECAN_R_0201);
+		tmpu321.byte.HL +=2;
+		if(tmpu321.byte.HL > CAN02MAX){
+			tmpu321.byte.HL = CAN02MINODD;
+		}
 		tmpu322.dword = CAN1->sFilterRegister[13].FR2 ;
 		tmpu322.dword = (tmpu322.dword >> 3);
 		CanFilterInit(13,tmpu321.dword,tmpu322.dword);
@@ -338,7 +375,10 @@ static void CANR_PeriodChargeFilter(void)
 		tmpu321.dword = (tmpu321.dword >> 3);		
 		tmpu322.dword = CAN1->sFilterRegister[13].FR2 ;
 		tmpu322.dword = (tmpu322.dword >> 3);
-		tmpu322.byte.HL = (tmpu322.byte.HL + 2)%(1+ECAN_R_0230 - ECAN_R_0201);
+		tmpu322.byte.HL += 2;
+		if(tmpu321.byte.HL > CAN02MAX){
+			tmpu321.byte.HL = CAN02MINEVEN;
+		}
 		CanFilterInit(13,tmpu321.dword,tmpu322.dword);
 	}
 	else{									//更改滤波器计时
@@ -351,6 +391,10 @@ static void CANR_PeriodChargeFilter(void)
 		}
 	}
 }
+
+/******************************************************
+//CAN接收数据解析函数
+******************************************************/
 static void CanRx_Analyse(void)
 {
 //	uint32 CAN_R_01xx[] = {};
@@ -380,15 +424,7 @@ static void CanRx_Analyse(void)
 				CANR01xx_Filter(index);//变更滤波ID index = 0~59
 			}
 			else if(index>=ECAN_R_0201 && index<=ECAN_R_0230){//单体温度		
-				memcpy(&g_btprobe_val[0][index*8],can_struct.rx_can_buf[index].Item.data,8);
-	//			g_btprobe_val[0][index*8] 	= can_struct.rx_can_buf[index].Item.data[0].byte;
-	//			g_btprobe_val[0][index*8+1] = can_struct.rx_can_buf[index].Item.data[1].byte;
-	//			g_btprobe_val[0][index*8+2] = can_struct.rx_can_buf[index].Item.data[2].byte;
-	//			g_btprobe_val[0][index*8+3] = can_struct.rx_can_buf[index].Item.data[3].byte;
-	//			g_btprobe_val[0][index*8+4] = can_struct.rx_can_buf[index].Item.data[4].byte;
-	//			g_btprobe_val[0][index*8+5] = can_struct.rx_can_buf[index].Item.data[5].byte;
-	//			g_btprobe_val[0][index*8+6] = can_struct.rx_can_buf[index].Item.data[6].byte;
-	//			g_btprobe_val[0][index*8+7] = can_struct.rx_can_buf[index].Item.data[7].byte;
+				memcpy(&g_btprobe_val[0][(index-ECAN_R_0201)*8],can_struct.rx_can_buf[index].Item.data,8);
 				CANR02xx_Filter(index-ECAN_R_0201);//变更滤波ID index-ECAN_R_0201 = 0~29
 			}
 			else if(index>=ECAN_R_2601 && index<=ECAN_R_2603){//VIN
@@ -466,9 +502,9 @@ static void CanRx_Analyse(void)
 						tmpval.byte.LL = can_struct.rx_can_buf[ECAN_R_06].Item.data[0].byte;	//通用报警标志
 						tmpval.byte.LH = can_struct.rx_can_buf[ECAN_R_06].Item.data[1].byte;
 						g_proalarm_union.Item.flag.dword 	= tmpval.dword;			
-						
+						*/
 						g_provehice_union.Item.charge = can_struct.rx_can_buf[ECAN_R_06].Item.data[2].byte;
-						tmpval.byte.LL = can_struct.rx_can_buf[ECAN_R_06].Item.data[3].byte;	//单次充电量
+					/*	tmpval.byte.LL = can_struct.rx_can_buf[ECAN_R_06].Item.data[3].byte;	//单次充电量
 						tmpval.byte.LH = can_struct.rx_can_buf[ECAN_R_06].Item.data[4].byte;
 						
 						tmpval.dword = 0;
@@ -505,10 +541,10 @@ static void CanRx_Analyse(void)
 						g_provehice_union.Item.SOC = can_struct.rx_can_buf[ECAN_R_09].Item.data[2].byte;//
 						tmpval.byte.LL = can_struct.rx_can_buf[ECAN_R_09].Item.data[3].byte;	//
 						tmpval.byte.LH = can_struct.rx_can_buf[ECAN_R_09].Item.data[4].byte;
-						g_provehice_union.Item.voltage = tmpval.word.L;		 
+						g_provehice_union.Item.current = tmpval.word.L;		 
 						tmpval.byte.LL = can_struct.rx_can_buf[ECAN_R_09].Item.data[5].byte;	//
 						tmpval.byte.LH = can_struct.rx_can_buf[ECAN_R_09].Item.data[6].byte;
-						g_provehice_union.Item.current = tmpval.word.L;		
+						g_provehice_union.Item.voltage = tmpval.word.L;		
 					
 						break;
 					}
@@ -536,8 +572,6 @@ static void CanRx_Analyse(void)
 						tmpval.byte.HH = can_struct.rx_can_buf[ECAN_R_10].Item.data[6].byte;
 						g_provehice_union.Item.mileage = tmpval.dword;		
 						
-					printf(" g_provehice_union.Item.mode = %d \r\n",g_provehice_union.Item.mode);
-					printf(" g_provehice_union.Item.mileage = %d \r\n",g_provehice_union.Item.mileage);
 						break;
 					}
 					case ECAN_R_11:{//VCU报文2				
@@ -606,44 +640,51 @@ static void CanRx_Analyse(void)
 }
 
 
+
+/******************************************************
+//CAN监测函数
+//暂用1s调用
+******************************************************/
 void CanMonitor(uint16 past_sec)
 {
-	if(1){//ACC开
+//	if(1){//ACC开
 		if(can_struct.can_open_flag == 0){//CAN没打开
 			can_struct.can_open_flag = TRUE;
 			ON_CAN_PWR();
 			CanInit();
+			sysm_timeout_struct.canrx_count = 0;
 			return;
 		}		
-		CanTx();			
+		
+		CanTx();	
+		
+		if(sysm_on_off_struct.canrx_switch == SYSM_OFF){				///CAN接收中断关闭后下面内容不执行
+			return;
+		}
+		
 		if(can_struct.rx_data_flag != 0xFF){//解析CAN
 			CanRx_Analyse();
+			sysm_timeout_struct.canrx_count = 0;
 			can_struct.rx_data_flag = 0xFF;
 		}
-		else{
-			if(0){///仪表长时间无数据,重启
-				#ifdef CAN_ERROR_ALARM
-				printf("\r\n meter break down alarm，wo will restart...\r\n")
+		else{			
+			sysm_timeout_struct.canrx_count += past_sec;
+			if(sysm_timeout_struct.canrx_count >= SYSM_CANRX_TIMEOUT){///仪表长时间无数据,重启
+				#ifdef CAN_DEBUG
+				printf((const char*)"\r\n meter break down alarm,wo will restart...\r\n");
 				#endif				
 				OFF_CAN_PWR();			
 				CanDeInit();
 				OSTimeDlyHMSM(0, 0, 2, 0);
-				CanInit();
 				ON_CAN_PWR();
+				CanInit();
+				sysm_timeout_struct.canrx_count = 0;
 			}
 		}
+		
 		CANR_PeriodChargeFilter();
-	}
-	else{
-		if(0){//如果ACC关
-			if(can_struct.can_open_flag == 1){//CAN已打开
-				can_struct.can_open_flag = FALSE;
-				CanDeInit();
-				OFF_CAN_PWR();
-				RamZero(can_struct.rx_can_buf[0].arry,CAN_BUF_LEN);
-			}
-		}
-	}
+//	}
+
 }
 
 

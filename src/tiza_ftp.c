@@ -7,7 +7,7 @@
 ** Descriptions: 
 *******************************************************************************************************/
 #define FTP_GLOBAL 
-
+#define FTP_DEBUG
 #include "tiza_include.h"
 
 #define FTP_FLAG_FIN 	0X01
@@ -22,126 +22,6 @@ uint8 ftp_wait_flag = FALSE;
 
 //===========================================================================================================
 
-/***
-ftp://Vehicle:Vehicle#*@202.102.090.166:21/THAG_M2_0H_12V13_131220.bin
-***/
-uint8 FtpAddrAnalysis(uint8 data[],uint16 len)
-{
-	uint8 *tem_p,*p_file_name,res = FALSE;
-  uint8 i,j,file_len;
-	
-	tem_p = data;
-
-	if(!MemCmp("ftp://",tem_p,StrLen("ftp://",0)))
-	{
-		goto RETURN_LAB;
-	}
-	tem_p += StrLen("ftp://",0);
-	len -= StrLen("ftp://",0);
-	
-	for(i=0;i<len;i++)///取用户名
-	{
-		if(i >= LEN_16-2)
-		{
-			goto RETURN_LAB;
-		}
-		if(tem_p[i] == ':')
-		{
-			break;
-		}
-		ftp_struct.user_name[i] = tem_p[i];
-	}
-	ftp_struct.user_name[i++] = 0x0d;
-	ftp_struct.user_name[i+1] = '\0';
-	tem_p += i;
-	len -= i;
-				
-	for(i=0;i<len;i++)///指向密码
-	{
-		if(i >= LEN_16-2)
-		{
-			goto RETURN_LAB;
-		}
-		if(tem_p[i] == '@')
-		{
-			break;
-		}
-		ftp_struct.pass_word[i] = tem_p[i];
-	}
-	ftp_struct.pass_word[i++] = 0x0d;
-	ftp_struct.pass_word[i+1] = '\0';
-	tem_p += i;
-	len -= i;
-	
-
-	if((tem_p[3] != '.')||(tem_p[7] != '.')||
-	   (tem_p[11] != '.')||(tem_p[15] != ':'))
-	{
-		goto RETURN_LAB;
-	}
-
-	for(i=0;i<4;i++) 
-	{
-		ftp_struct.ftp_dst_ctrl_ip[i] = 0;
-		for(j=0;j<3;j++) 
-		{
-
-			ftp_struct.ftp_dst_ctrl_ip[i] = ftp_struct.ftp_dst_ctrl_ip[i]*10+(tem_p[i*4+j]&0x0f);
-		}
-	}
-	tem_p += 16;
-	len -= 16;
-	
-	if((tem_p[0] != '2')||(tem_p[1] != '1')||(tem_p[2] != '/'))
-	{
-		goto RETURN_LAB;
-	}
-	ftp_struct.ftp_dst_ctrl_port[0] = 0;
-	ftp_struct.ftp_dst_ctrl_port[1] = 21;///控制端口都为21
-	len = len-3;
-	tem_p += 3;
-	
-	for(i=len-1;i>0;i--)	//-查找可能有的路劲
-	{
-		if(tem_p[i] == '/')
-		{
-			file_len = len-1-i;
-			p_file_name = tem_p+i+1;	//-最后一个/后面是文件名称
-			break;
-		}
-	}
-	
-	ftp_struct.file_path[0] = '\0';
-	if(i!=0)	//-判断是否存在路劲,如果i=0说明不存在路劲
-	{
-		if((i+1) >= (LEN_64-2))
-		{
-			goto RETURN_LAB;
-		}
-		
-		MemCpy(ftp_struct.file_path,tem_p,i+1);
-		ftp_struct.file_path[i+1] = 0x0d;
-		ftp_struct.file_path[i+2] = '\0';
-	}
-	else
-	{
-		file_len = len;
-		p_file_name = tem_p;
-	}
-	
-	if((file_len == 0)||(file_len >= LEN_64-2))
-	{
-		goto RETURN_LAB;
-	}
-	MemCpy(ftp_struct.file_name,p_file_name,file_len);	//-获取的文件名记录下来
-	ftp_struct.file_name[file_len] = 0x0d;
-	ftp_struct.file_name[file_len+1] = '\0';
-		
-	//-res = MemCmp(ftp_struct.file_name,(uint8*)sys_const_para_struct.software_version,15);
-	res = TRUE;	//-目前只要正确指向就进行升级
-RETURN_LAB:
-	return res;
-}
 
 static uint8 FtpCheckSIM(void)
 {
@@ -195,21 +75,21 @@ static uint8 FtpSAPBR(void)
 	uint8 res=RES_FALSE;
 	
 	//-1.Set the type of internet connection for FTP
-	L218SendAtCmd(AT_SAPBR_INDEX,FTP_TYPEOFINTERCONNECT,21,(uint8 *)OK_ACK,2);
+	L218SendAtCmd(AT_SAPBR_INDEX,(uint8*)FTP_TYPEOFINTERCONNECT,21,(uint8 *)OK_ACK,2);
 	
 	if(g_at_cmd_struct[AT_SAPBR_INDEX].exe_flag == EXE_OK)
 		res = RES_TRUE;
 	else
 		return res;
 	//-2.Set APN for FTP	
-	L218SendAtCmd(AT_SAPBR_INDEX,FTP_SETAPN,18,(uint8 *)OK_ACK,2);
+	L218SendAtCmd(AT_SAPBR_INDEX,(uint8*)FTP_SETAPN,18,(uint8 *)OK_ACK,2);
 	
 	if(g_at_cmd_struct[AT_SAPBR_INDEX].exe_flag == EXE_OK)
 		res = RES_TRUE;
 	else
 		return res;	
 	//-3.Open bearer	
-	L218SendAtCmd(AT_SAPBR_INDEX,FTP_OPENBEARER,4,(uint8 *)OK_ACK,2);
+	L218SendAtCmd(AT_SAPBR_INDEX,(uint8*)FTP_OPENBEARER,4,(uint8 *)OK_ACK,2);
 	//-暂时不考虑应答?是否有应答待验证??
 	if(g_at_cmd_struct[AT_SAPBR_INDEX].exe_flag == EXE_OK)
 		res = RES_TRUE;
@@ -236,9 +116,12 @@ static uint8 FtpFTPTYPE(void)
 static uint8 FtpFTPSERV(void)
 {
 	uint8 res=RES_WAIT;
+	uint8 temp_cmd[40];
 	
-	L218SendAtCmd(AT_FTPSERV_INDEX,NULL,0,(uint8 *)OK_ACK,2);
+	sprintf((char*)temp_cmd, (const char*)AT_FTPSERV, g_proupgread_struct.ip_domain[2],g_proupgread_struct.ip_domain[3],g_proupgread_struct.ip_domain[4],g_proupgread_struct.ip_domain[5]);
+	g_at_cmd_struct[AT_FTPSERV_INDEX].cmd_text = (uint8 *)temp_cmd;
 	
+	L218SendAtCmd(AT_FTPSERV_INDEX,NULL,0,(uint8 *)OK_ACK,2);	
 	if(g_at_cmd_struct[AT_FTPSERV_INDEX].exe_flag == EXE_OK)
 		res = RES_TRUE;
 	else
@@ -250,9 +133,12 @@ static uint8 FtpFTPSERV(void)
 static uint8 FtpFTPPORT(void)
 {
 	uint8 res=RES_WAIT;
+	uint8 temp_cmd[40];
 	
-	L218SendAtCmd(AT_FTPPORT_INDEX,NULL,0,(uint8 *)OK_ACK,2);
+	sprintf((char*)temp_cmd, (const char*)AT_FTPPORT, g_proupgread_struct.port);
+	g_at_cmd_struct[AT_FTPPORT_INDEX].cmd_text = (uint8 *)temp_cmd;
 	
+	L218SendAtCmd(AT_FTPPORT_INDEX,NULL,0,(uint8 *)OK_ACK,2);	
 	if(g_at_cmd_struct[AT_FTPPORT_INDEX].exe_flag == EXE_OK)
 		res = RES_TRUE;
 	else
@@ -264,9 +150,12 @@ static uint8 FtpFTPPORT(void)
 static uint8 FtpFTPUN(void)
 {
 	uint8 res=RES_WAIT;
+	uint8 temp_cmd[40];
 	
-	L218SendAtCmd(AT_FTPUN_INDEX,NULL,0,(uint8 *)OK_ACK,2);
+	sprintf((char*)temp_cmd, (const char*)AT_FTPUN, g_proupgread_struct.user_name);
+	g_at_cmd_struct[AT_FTPUN_INDEX].cmd_text = (uint8 *)temp_cmd;
 	
+	L218SendAtCmd(AT_FTPUN_INDEX,NULL,0,(uint8 *)OK_ACK,2);	
 	if(g_at_cmd_struct[AT_FTPUN_INDEX].exe_flag == EXE_OK)
 		res = RES_TRUE;
 	else
@@ -278,9 +167,12 @@ static uint8 FtpFTPUN(void)
 static uint8 FtpFTPPW(void)
 {
 	uint8 res=RES_WAIT;
+	uint8 temp_cmd[40];
 	
-	L218SendAtCmd(AT_FTPPW_INDEX,NULL,0,(uint8 *)OK_ACK,2);
+	sprintf((char*)temp_cmd, (const char*)AT_FTPPW, g_proupgread_struct.pass_word);
+	g_at_cmd_struct[AT_FTPPW_INDEX].cmd_text = (uint8 *)temp_cmd;
 	
+	L218SendAtCmd(AT_FTPPW_INDEX,NULL,0,(uint8 *)OK_ACK,2);	
 	if(g_at_cmd_struct[AT_FTPPW_INDEX].exe_flag == EXE_OK)
 		res = RES_TRUE;
 	else
@@ -291,8 +183,8 @@ static uint8 FtpFTPPW(void)
 
 static uint8 FtpFTPSIZE(void)
 {
-	uint8 res=RES_WAIT;
 	uint8 ack[] = {"+FTPSIZE: "};
+	uint8 res=RES_WAIT;
 	
 	L218SendAtCmd(AT_FTPSIZE_INDEX,NULL,0,(uint8 *)ack,10);
 	
@@ -307,15 +199,44 @@ static uint8 FtpFTPSIZE(void)
 static uint8 FtpSETDLAFile(void)	//-简单跑流程,组织是有问题的???
 {
 	uint8 res=RES_FALSE;
-	uint8 TEMP_file_size[32] = "2,1024\x0d";
+	uint8 temp_cmd[70],temp_file[40];
+//	uint8 TEMP_file_size[32] = "2,1024\x0d";	
+  uint8  i = 0,cmp_data[20];// = {"+FTPGET:1,1"};
+	
+	
+	cmp_data[i++] = '+';
+	cmp_data[i++] = 'F';
+	cmp_data[i++] = 'T';
+	cmp_data[i++] = 'P';
+	cmp_data[i++] = 'G';
+	cmp_data[i++] = 'E';
+	cmp_data[i++] = 'T';
+	cmp_data[i++] = ':';
+	cmp_data[i++] = '1';	//8
+	cmp_data[i++] = ',';
+	cmp_data[i++] = '1';
+	cmp_data[i++] = 0;
+	
+	i = StrLen(g_proupgread_struct.file_path,0);
+	while( i--){
+		if(g_proupgread_struct.file_path[i] == '/'){
+			break;
+		}
+	}
+	i += 1;
+	sprintf((char*)temp_cmd, (const char*)AT_FTPGETNAME, &g_proupgread_struct.file_path[i]);
+	g_at_cmd_struct[AT_FTPGETNAME_INDEX].cmd_text = (uint8 *)temp_cmd;
 	
 	L218SendAtCmd(AT_FTPGETNAME_INDEX,NULL,0,(uint8 *)OK_ACK,2);
-	
 	if(g_at_cmd_struct[AT_FTPGETNAME_INDEX].exe_flag == EXE_OK)
 		res = RES_TRUE;
 	else
 		return res;
 
+	memcpy(temp_file, g_proupgread_struct.file_path, i);
+	temp_file[i] = 0;
+	sprintf((char*)temp_cmd, (const char*)AT_FTPGETPATH, temp_file);
+	g_at_cmd_struct[AT_FTPGETPATH_INDEX].cmd_text = (uint8 *)temp_cmd;
 	res=RES_FALSE;
 	L218SendAtCmd(AT_FTPGETPATH_INDEX,NULL,0,(uint8 *)OK_ACK,2);
 	
@@ -333,7 +254,7 @@ static uint8 FtpSETDLAFile(void)	//-简单跑流程,组织是有问题的???
 //		return res;
 
 	res=RES_FALSE;
-	L218SendAtCmd(AT_FTPGET1_INDEX,NULL,0,(uint8 *)FTPGET_OK_ACK,11);
+	L218SendAtCmd(AT_FTPGET1_INDEX,NULL,0, cmp_data, 11);
 	
 	if(g_at_cmd_struct[AT_FTPGET1_INDEX].exe_flag == EXE_OK)
 		res = RES_TRUE;
@@ -357,40 +278,23 @@ static uint8 FtpSETDLAFile(void)	//-简单跑流程,组织是有问题的???
 static uint8 FtpDLAFile(void)
 {
 	uint8 res=RES_WAIT;
-	uint8 TEMP_file_size[32] = "2,1024\x0d";
-//	uint8 TEMP_OK_ACK[32];
-	uint8 TEMP_OK_ACK[32] = "+FTPGET:1,";
+	uint8 TEMP_file_size[10] = "2,1024\x0d";
+  uint8  i = 0,TEMP_OK_ACK[20];// = {"+FTPGET:1,1"};
+	
+	TEMP_OK_ACK[i++] = '+';
+	TEMP_OK_ACK[i++] = 'F';
+	TEMP_OK_ACK[i++] = 'T';
+	TEMP_OK_ACK[i++] = 'P';
+	TEMP_OK_ACK[i++] = 'G';
+	TEMP_OK_ACK[i++] = 'E';
+	TEMP_OK_ACK[i++] = 'T';
+	TEMP_OK_ACK[i++] = ':';
+	TEMP_OK_ACK[i++] = '1';	//8
+	TEMP_OK_ACK[i++] = ',';
+	TEMP_OK_ACK[i++] = '1';
+	TEMP_OK_ACK[i++] = 0;
 
-//	TEMP_OK_ACK[0] = '\x0d';
-//	TEMP_OK_ACK[1] = '\x0a';
-
-//	TEMP_OK_ACK[2] = 'O';
-//	TEMP_OK_ACK[3] = 'K';
-
-//	TEMP_OK_ACK[4] = '\x0d';
-//	TEMP_OK_ACK[5] = '\x0a';
-//	TEMP_OK_ACK[6] = '\x0d';
-//	TEMP_OK_ACK[7] = '\x0a';
-//	TEMP_OK_ACK[8] = '\x0d';
-//	TEMP_OK_ACK[9] = '\x0a';
-
-//	TEMP_OK_ACK[10] = '+';
-//	TEMP_OK_ACK[11] = 'F';
-//	TEMP_OK_ACK[12] = 'T';
-//	TEMP_OK_ACK[13] = 'P';
-//	TEMP_OK_ACK[14] = 'G';
-//	TEMP_OK_ACK[15] = 'E';
-//	TEMP_OK_ACK[16] = 'T';
-//	TEMP_OK_ACK[17] = ':';
-////	TEMP_OK_ACK[18] = ' ';
-////	TEMP_OK_ACK[19] = '1';
-////	TEMP_OK_ACK[20] = ',';
-////	TEMP_OK_ACK[21] = '\0';
-//	TEMP_OK_ACK[18] = '1';
-//	TEMP_OK_ACK[19] = ',';
-//	TEMP_OK_ACK[20] = '\0';
-
-	L218SendAtCmd(AT_FTPGET2_INDEX,TEMP_file_size,7,(uint8 *)TEMP_OK_ACK,StrLen(TEMP_OK_ACK,0));
+	L218SendAtCmd(AT_FTPGET2_INDEX,TEMP_file_size,7,(uint8 *)TEMP_OK_ACK,11);
 	
 	if(g_at_cmd_struct[AT_FTPGET2_INDEX].exe_flag == EXE_OK)
 		res = RES_TRUE;

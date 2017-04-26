@@ -10,69 +10,25 @@
 	#endif
 	
 	
+		
+	#define SYSM_CANRX_TIMEOUT   60		//60个计数(1s调用就60s)	
+	typedef struct{//系统程序块超时计时
+		uint16 canrx_count;
+	}SYSM_TIMEOUT_STRUCT;
+	
+	#define SYSM_ON							1
+	#define SYSM_OFF						0
+	typedef struct{//系统程序块是否启用 开关
+		uint16 canrx_switch;						//接收中断
+		uint16 GPRSPacketTx_switch;						//GPRS无需应答式发送 或 打包给周期发送
+		uint16 GPRSPeriodTx_switch;						//GPRS需要应答式发送
+	}SYSM_ON_OFF_STRUCT;
+	
+	EXTERN_SYS_PARA SYSM_TIMEOUT_STRUCT sysm_timeout_struct;
+	EXTERN_SYS_PARA SYSM_ON_OFF_STRUCT 	sysm_on_off_struct;
+	
 
 	
-	
-	
 
-	
-	
-	// void SysCommParaInit(void);
-	// uint8 SysSerialRead(void);
-	// uint8 SysSerialWrite(void);
-	// void SysPrivateParaInit(void);
-	// void SysWorkParaInit(void);
-	// void SysBootParaRead(void);
-	// uint8 SysBootParaWrite(void);
-	// uint8 SysPrivateParaRead(void);
-	// uint8 SysPrivateParaWrite(void);
-	// uint8 SysWorkParaRead(void);
-	// uint8 SysWorkParaWrite(void);
-	// void SysReset(void);
-	// void TermReset(void);
-	// void TermReset2(void);
-	// void TermRingReset(void);
-	// void SysKeyDataSave(void);
-	// void SysVaryInit(void);
-	// void SysParaRead(void);
-	// uint16 ParaCorrespond(uint16 cmd);
-	// void LockRecord(uint8 lock_method,uint8 level,uint8 reason);
-	// void UnLockRecord(void);
-	// uint16 QuerySysPrivatePara(uint8 dst[],uint8 src[],uint16 len,uint8 is_local_flag);
-	// uint8 SetSysPrivatePara(uint8 data[],uint16 len,uint8 is_local_flag);
-	
-	// uint8 GetSmsAlarmCenterNum(uint8 data[]);
-	// uint8 GetApn(uint8 data[]);
-	// uint8 GetMasterIp(uint8 data[]);
-	// uint8 GetSlaverIp(uint8 data[]);
-	// uint8 GetPort(uint8 data[]);
-	// uint8 GetTerminalId(uint8 data[]);
-	// uint8 GetTerminalPassword(uint8 data[]);
-	// uint8 GetTerminalSerialNum(uint8 data[]);
-	// uint8 GetHardwareVersion(uint8 data[]);
-	// uint8 GetSleepTimer(uint8 data[]);
-	// uint8 GetAccAtatistic(uint8 data[]);
-	// uint8 GetMeterErrTimer(uint8 data[]);
-	// uint8 GetOverSpeed(uint8 data[]);
-	// uint8 GetLowVoltageAlarm(uint8 data[]);
-	// uint8 GetBindImsi(uint8 data[]);
-	
-	// uint8 SetSmsAlarmCenterNum(uint8 data[],uint8 len);
-	// uint8 SetApn(uint8 data[],uint8 len);
-	// uint8 SetMasterIp(uint8 data[],uint8 len);
-	// uint8 SetSlaverIp(uint8 data[],uint8 len);
-	// uint8 SetPort(uint8 data[],uint8 len);
-	// uint8 SetTerminalId(uint8 data[],uint8 len);
-	// uint8 SetTerminalPassword(uint8 data[],uint8 len);
-	// uint8 ParaRecover(uint8 data[],uint8 len);
-	// uint8 SetTerminalSerialNum(uint8 data[],uint8 len);
-	// uint8 SetHardwareVersion(uint8 data[],uint8 len);
-	// uint8 SetSleepTimer(uint8 data[],uint8 len);
-	// uint8 SetAccStatistic(uint8 data[],uint8 len);
-	// uint8 SetMeterErrTimer(uint8 data[],uint8 len);
-	// uint8 SetOverSpeed(uint8 data[],uint8 len);
-	// uint8 SetLowVoltageAlarm(uint8 data[],uint8 len);
-	// uint8 SetBindImsi(uint8 data[],uint8 len);
-	// uint8 SetWorkPara(uint8 data[],uint8 len);
 
 #endif
